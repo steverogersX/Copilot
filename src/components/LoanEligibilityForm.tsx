@@ -2,6 +2,7 @@
 
 import { Plus } from "lucide-react";
 import { useForm } from "@tanstack/react-form";
+import { engine } from "@/lib/engine";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -114,7 +115,7 @@ export default function LoanEligibilityForm() {
       onSubmit: loanFormSchema,
     },
     onSubmit: async ({ value }) => {
-      console.log("Loan eligibility form submitted:", value);
+      engine(value);
     },
   });
 
