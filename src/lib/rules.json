@@ -47,5 +47,10 @@
     "strategy": "low",
     "why": "Using the optimistic/low end of the assumed rate band to compute the EMI needed for the requested amount, rather than the midpoint or conservative high end.",
     "source": "our judgement"
+  },
+  "selfEmployedConfidence": {
+    "newBusinessThresholdYears": 2,
+    "why": "Confidence-only modifier, does not affect core affordability math - a newer business carries more income-continuity uncertainty over the loan's tenure.",
+    "source": "our judgement"
   }
 }

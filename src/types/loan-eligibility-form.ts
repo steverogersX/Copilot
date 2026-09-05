@@ -1,5 +1,10 @@
 import { z } from "zod";
 
+// TODO: per the brief, only Personal, Business/LAP, and Two-wheeler/EV are
+// needed (Priya, Ravi, Anita). Home/Car/Education/Gold are broader than the
+// brief's scope and should probably be trimmed before submission - not
+// removed yet since the exact Business/LAP and Two-wheeler enum values
+// haven't been confirmed.
 export enum LoanType {
   Personal = "Personal",
   Home = "Home",
@@ -139,6 +144,8 @@ const baseLoanFormSchema = z.object({
 });
 
 export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
+  // TODO: Informal income type needs its own superRefine block +
+  // numberOfIncomeSources field before engine() can support it.
   if (data.incomeType === IncomeType.SelfEmployed) {
     if (!data.incomeStabilityLow || Number(data.incomeStabilityLow) <= 0) {
       ctx.addIssue({

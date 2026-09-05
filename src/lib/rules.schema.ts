@@ -61,6 +61,11 @@ export const rulesSchema = z.object({
     why: z.string(),
     source: z.string(),
   }),
+  selfEmployedConfidence: z.object({
+    newBusinessThresholdYears: z.number().int().positive(),
+    why: z.string(),
+    source: z.string(),
+  }),
 });
 
 export type Rules = z.infer<typeof rulesSchema>;

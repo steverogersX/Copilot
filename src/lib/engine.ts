@@ -48,6 +48,7 @@ export type EligibilityResult = {
     emiCeiling: number;
     stressCaseEmiCeiling: number;
     stressCaseNote: string;
+    tenureOptions: { months: number; emi: number }[];
   };
 };
 
@@ -101,6 +102,15 @@ function getRateBand(
   };
 }
 
+// One-level confidence downgrade (High->Medium, Medium->Low, Low stays Low).
+// Used for the self-employed new-business modifier - confidence-label only,
+// never touches any EMI/amount figure.
+function downgradeConfidence(confidence: Confidence): Confidence {
+  if (confidence === Confidence.High) return Confidence.Medium;
+  if (confidence === Confidence.Medium) return Confidence.Low;
+  return Confidence.Low;
+}
+
 function calculateApr(
   principal: number,
   annualRatePercent: number,
@@ -119,27 +129,51 @@ function calculateApr(
 }
 
 export function engine(formData: LoanFormValues): EligibilityResult | null {
-  // Scoped for now: salaried income + personal loan only.
+  // Scoped for now: salaried or self-employed income + personal loan only.
   if (
-    formData.incomeType !== IncomeType.Salaried ||
+    (formData.incomeType !== IncomeType.Salaried &&
+      formData.incomeType !== IncomeType.SelfEmployed) ||
     formData.loanType !== LoanType.Personal
   ) {
     console.log(
-      "engine: unsupported combination for now (only salaried + personal loan)"
+      "engine: unsupported combination for now (only salaried/self-employed + personal loan)"
     );
     return null;
   }
+
+  const isSelfEmployed = formData.incomeType === IncomeType.SelfEmployed;
 
   const age = Number(formData.age);
   const amountWanted = Number(formData.amountWanted);
   let tenureMonths = Number(formData.tenurePreferred);
   let tenureAdjustmentNote: string | null = null;
 
-  // 1. Deduct household expenses from take-home income.
-  let freeMoney =
-    Number(formData.netMonthlyIncome) - Number(formData.monthlyExpenses);
+  const retirementAge = isSelfEmployed
+    ? rules.retirementAge.selfEmployed
+    : rules.retirementAge.salaried;
 
-  // 2. Deduct existing EMIs, if any. Track the total separately too - it's
+  // For self-employed, the LOW month figure drives the borrower-side safety
+  // math (freeMoney, the stress case) - an EMI is owed every month regardless
+  // of that month's actual earnings, so the worst realistic month is the
+  // safe anchor.
+  const monthlyIncomeForMath = isSelfEmployed
+    ? Number(formData.incomeStabilityLow)
+    : Number(formData.netMonthlyIncome);
+
+  // The lender-facing FOIR check uses a less conservative figure, since real
+  // lenders assess bank-statement pattern/average income, not a borrower's
+  // worst month (§4 market research). incomeStabilityHigh is intentionally
+  // NOT used anywhere in the math - a borrower's best month overstates what
+  // a lender would realistically extend credit against; it stays display-only
+  // (e.g. "your best month was ₹X") for the borrower's own context.
+  const lenderFacingIncome = isSelfEmployed
+    ? Number(formData.incomeStabilityAvg)
+    : Number(formData.netMonthlyIncome);
+
+  // 1. Deduct household expenses from take-home income.
+  let freeMoney = monthlyIncomeForMath - Number(formData.monthlyExpenses);
+
+  // 2. Deduct existing EMIs, if any. Track the total separately too, it's
   // needed again below for the FOIR check, which cares about total debt
   // obligations vs. income, not leftover cash after expenses.
   let existingObligations = 0;
@@ -173,6 +207,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         emiCeiling: 0,
         stressCaseEmiCeiling: 0,
         stressCaseNote: "No free cash even before a rate rise or income drop.",
+        tenureOptions: [],
       },
     };
   }
@@ -182,18 +217,17 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   const requestedTenureYears = tenureMonths / 12;
   const ageAtLoanEnd = age + requestedTenureYears;
 
-  if (ageAtLoanEnd > rules.retirementAge.salaried) {
-    const maxTenureMonths = Math.max(
-      0,
-      Math.floor((rules.retirementAge.salaried - age) * 12)
-    );
+  if (ageAtLoanEnd > retirementAge) {
+    const maxTenureMonths = Math.max(0, Math.floor((retirementAge - age) * 12));
 
     if (maxTenureMonths <= 0) {
       return {
         tenureAdjustmentNote: null,
         o1: {
           verdict: Verdict.DontBorrow,
-          reason: `At age ${age}, you're already at or past the assumed retirement age of ${rules.retirementAge.salaried} lenders use for salaried borrowers - there's no valid tenure left to offer a loan against.`,
+          reason: `At age ${age}, you're already at or past the assumed retirement age of ${retirementAge} lenders use for ${
+            isSelfEmployed ? "self-employed" : "salaried"
+          } borrowers - there's no valid tenure left to offer a loan against.`,
         },
         o2: { lenderLikely: 0, safeToCarry: 0 },
         o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
@@ -201,13 +235,14 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
           emiCeiling: 0,
           stressCaseEmiCeiling: 0,
           stressCaseNote: "No valid tenure remains before retirement age.",
+          tenureOptions: [],
         },
       };
     }
 
     tenureAdjustmentNote = `Your requested tenure (${tenureMonths} months) would end at age ${Math.round(
       ageAtLoanEnd
-    )}, past the assumed retirement age of ${rules.retirementAge.salaried}. Tenure capped to ${maxTenureMonths} months for this calculation.`;
+    )}, past the assumed retirement age of ${retirementAge}. Tenure capped to ${maxTenureMonths} months for this calculation.`;
     tenureMonths = maxTenureMonths;
   }
 
@@ -237,6 +272,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         stressCaseEmiCeiling: 0,
         stressCaseNote:
           "Recent bounce + high-cost debt pattern detected - resolve these before taking on new debt.",
+        tenureOptions: [],
       },
     };
   }
@@ -245,8 +281,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   // new) must not exceed a fixed share of monthly income, regardless of what's
   // left over after expenses. This is independent of the freeMoney check above
   // and can be the stricter of the two.
-  const foirMaxTotalEmi =
-    Number(formData.netMonthlyIncome) * (rules.foir.capPercent / 100);
+  const foirMaxTotalEmi = lenderFacingIncome * (rules.foir.capPercent / 100);
   const foirMaxNewEmi = Math.max(0, foirMaxTotalEmi - existingObligations);
 
   const lenderLikelyEmiCeiling = foirMaxNewEmi;
@@ -265,6 +300,17 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         : rateBand.low;
 
   const neededEmi = calculateEmi(amountWanted, assumedRate, tenureMonths);
+
+  // 6b. Self-employed new-business confidence modifier - yearsInBusiness
+  // never touches freeMoney/foirMaxNewEmi/borrowerSafeEmiCeiling or any
+  // EMI/amount figure, only the reported confidence label.
+  const isNewBusiness =
+    isSelfEmployed &&
+    Number(formData.yearsInBusiness) <
+      rules.selfEmployedConfidence.newBusinessThresholdYears;
+  const reportedConfidence = isNewBusiness
+    ? downgradeConfidence(rateBand.confidence)
+    : rateBand.confidence;
 
   // 7. Verdict
   let verdict: Verdict;
@@ -320,8 +366,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   // the other named brief dimension but income drop is the primary case
   // here since it applies across income types, not just floating-rate loans.
   const stressIncomeDropPercent = rules.stressCase.incomeDropPercent / 100;
-  const stressedIncome =
-    Number(formData.netMonthlyIncome) * (1 - stressIncomeDropPercent);
+  const stressedIncome = monthlyIncomeForMath * (1 - stressIncomeDropPercent);
   const stressedFreeMoney =
     stressedIncome - Number(formData.monthlyExpenses) - existingObligations;
   const stressCaseEmiCeiling = Math.max(
@@ -345,12 +390,17 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       rateBandHigh: rateBand.high,
       aprBandLow: Math.round(aprBandLow * 100) / 100,
       aprBandHigh: Math.round(aprBandHigh * 100) / 100,
-      confidence: rateBand.confidence,
+      confidence: reportedConfidence,
     },
     o4: {
       emiCeiling: Math.round(recommendedEmiCeiling),
       stressCaseEmiCeiling: Math.round(stressCaseEmiCeiling),
       stressCaseNote,
+      tenureOptions: [
+        { months: tenureMonths, emi: Math.round(neededEmi) },
+        { months: tenureMonths + 12, emi: Math.round(calculateEmi(amountWanted, assumedRate, tenureMonths + 12)) },
+        { months: Math.max(12, tenureMonths - 12), emi: Math.round(calculateEmi(amountWanted, assumedRate, Math.max(12, tenureMonths - 12))) },
+      ],
     },
   };
 }
