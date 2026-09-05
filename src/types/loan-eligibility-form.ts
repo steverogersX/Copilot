@@ -137,6 +137,10 @@ const baseLoanFormSchema = z.object({
   highCostDebtAmount: z.string(),
   creditScore: z.string(),
   creditScoreUnknown: z.boolean(),
+  hasCollateral: yesNoOptional,
+  collateralValue: z.string(),
+  collateralAlreadyPledged: yesNoOptional,
+  collateralOutstandingAmount: z.string(),
 });
 
 export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
@@ -182,6 +186,29 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
       message: "Enter the outstanding amount",
       path: ["highCostDebtAmount"],
     });
+  }
+
+  // Adaptive collateral branch - only ask what applies:
+  // no collateral -> stop; collateral -> value; already pledged -> outstanding.
+  if (data.hasCollateral === "yes") {
+    if (!data.collateralValue || Number(data.collateralValue) <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter the estimated value of the asset",
+        path: ["collateralValue"],
+      });
+    }
+    if (
+      data.collateralAlreadyPledged === "yes" &&
+      (!data.collateralOutstandingAmount ||
+        Number(data.collateralOutstandingAmount) <= 0)
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter the outstanding amount on the existing loan",
+        path: ["collateralOutstandingAmount"],
+      });
+    }
   }
 });
 

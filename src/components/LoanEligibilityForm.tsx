@@ -56,6 +56,10 @@ const defaultValues: LoanFormValues = {
   highCostDebtAmount: "",
   creditScore: "",
   creditScoreUnknown: false,
+  hasCollateral: "",
+  collateralValue: "",
+  collateralAlreadyPledged: "",
+  collateralOutstandingAmount: "",
 };
 
 const fieldWrapper = "flex flex-col gap-1.5";
@@ -441,6 +445,140 @@ export default function LoanEligibilityForm() {
                   <p className={errorClass}>
                     {field.state.meta.errors.join(", ")}
                   </p>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          {/* 6b. Collateral - adaptive branch: no collateral -> stop, else
+              value -> already pledged? -> outstanding amount. */}
+          <form.Field name="hasCollateral">
+            {(field) => (
+              <div className={fieldWrapper}>
+                <Label>
+                  Do you own any property/asset you could pledge as
+                  collateral?
+                </Label>
+                <RadioGroup
+                  name={field.name}
+                  value={field.state.value || null}
+                  onValueChange={(value) =>
+                    field.handleChange((value as "yes" | "no") ?? "")
+                  }
+                  className="flex flex-row gap-4"
+                >
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <RadioGroupItem value="yes" />
+                    Yes
+                  </label>
+                  <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                    <RadioGroupItem value="no" />
+                    No
+                  </label>
+                </RadioGroup>
+
+                {field.state.value === "yes" && (
+                  <div className="mt-1 flex flex-col gap-4">
+                    <form.Field name="collateralValue">
+                      {(valueField) => (
+                        <div className={`${fieldWrapper} sm:max-w-[50%]`}>
+                          <Label htmlFor={valueField.name}>
+                            Estimated value of that asset
+                            <Required />
+                          </Label>
+                          <Input
+                            id={valueField.name}
+                            name={valueField.name}
+                            type="number"
+                            min={1}
+                            inputMode="numeric"
+                            placeholder="e.g. 2000000"
+                            value={valueField.state.value}
+                            onBlur={valueField.handleBlur}
+                            onKeyDown={blockNonDigitKeys}
+                            onChange={(e) =>
+                              valueField.handleChange(
+                                onlyDigits(e.target.value)
+                              )
+                            }
+                          />
+                          {valueField.state.meta.errors.length > 0 && (
+                            <p className={errorClass}>
+                              {valueField.state.meta.errors.join(", ")}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </form.Field>
+
+                    <form.Field name="collateralAlreadyPledged">
+                      {(pledgedField) => (
+                        <div className={fieldWrapper}>
+                          <Label>
+                            Is it already pledged against any existing loan?
+                          </Label>
+                          <RadioGroup
+                            name={pledgedField.name}
+                            value={pledgedField.state.value || null}
+                            onValueChange={(value) =>
+                              pledgedField.handleChange(
+                                (value as "yes" | "no") ?? ""
+                              )
+                            }
+                            className="flex flex-row gap-4"
+                          >
+                            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                              <RadioGroupItem value="yes" />
+                              Yes
+                            </label>
+                            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                              <RadioGroupItem value="no" />
+                              No
+                            </label>
+                          </RadioGroup>
+
+                          {pledgedField.state.value === "yes" && (
+                            <form.Field name="collateralOutstandingAmount">
+                              {(outstandingField) => (
+                                <div
+                                  className={`${fieldWrapper} mt-1 sm:max-w-[50%]`}
+                                >
+                                  <Label htmlFor={outstandingField.name}>
+                                    Outstanding amount on that existing loan
+                                    <Required />
+                                  </Label>
+                                  <Input
+                                    id={outstandingField.name}
+                                    name={outstandingField.name}
+                                    type="number"
+                                    min={1}
+                                    inputMode="numeric"
+                                    placeholder="e.g. 500000"
+                                    value={outstandingField.state.value}
+                                    onBlur={outstandingField.handleBlur}
+                                    onKeyDown={blockNonDigitKeys}
+                                    onChange={(e) =>
+                                      outstandingField.handleChange(
+                                        onlyDigits(e.target.value)
+                                      )
+                                    }
+                                  />
+                                  {outstandingField.state.meta.errors.length >
+                                    0 && (
+                                    <p className={errorClass}>
+                                      {outstandingField.state.meta.errors.join(
+                                        ", "
+                                      )}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                            </form.Field>
+                          )}
+                        </div>
+                      )}
+                    </form.Field>
+                  </div>
                 )}
               </div>
             )}
