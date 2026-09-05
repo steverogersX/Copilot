@@ -1,0 +1,51 @@
+{
+  "foir": {
+    "capPercent": 50,
+    "why": "Industry-cited ideal FOIR range is 40-50%; using the upper bound as a single assumed cap.",
+    "source": "Poonawalla Fincorp, L&T Finance, IndusInd Bank (mid-2026); our judgement within the cited range"
+  },
+  "retirementAge": {
+    "salaried": 60,
+    "selfEmployed": 65,
+    "why": "Approximate lender-cap convention for loan-end age by income type. Only 'salaried' is wired into the engine so far.",
+    "source": "our judgement, typical lender practice"
+  },
+  "rateBands": {
+    "tiers": [
+      { "minScore": 750, "maxScore": null, "lowPercent": 9.99, "highPercent": 11, "confidence": "high" },
+      { "minScore": 700, "maxScore": 749, "lowPercent": 11, "highPercent": 16, "confidence": "high" },
+      { "minScore": 650, "maxScore": 699, "lowPercent": 16, "highPercent": 22, "confidence": "medium" },
+      { "minScore": 0, "maxScore": 649, "lowPercent": 22, "highPercent": 30, "confidence": "medium" }
+    ],
+    "unknown": { "lowPercent": 14, "highPercent": 24, "confidence": "low" },
+    "why": "Never default unknown credit score to worst-case or best-case; widest band + low confidence instead.",
+    "source": "Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment)"
+  },
+  "processingFee": {
+    "lowPercent": 1,
+    "highPercent": 3,
+    "gstRate": 0.18,
+    "why": "Market-observed range is 0.5-5%; using a mid-range band, not the extremes.",
+    "source": "Paisabazaar, DMI Finance, BankBazaar (mid-2026)"
+  },
+  "highCostDebt": {
+    "assumedAnnualRate": 0.30,
+    "why": "Used to estimate a monthly interest-only servicing cost for high-cost debt where no EMI is stated, so it still affects the affordability math, not just the override flag.",
+    "source": "our judgement, informed by observed app-loan/informal-lender rates"
+  },
+  "bounceOverride": {
+    "recentWindowMonths": 3,
+    "why": "A single old/isolated bounce should not auto-reject; only a RECENT bounce combined with high-cost debt should override the math.",
+    "source": "our judgement"
+  },
+  "stressCase": {
+    "incomeDropPercent": 20,
+    "why": "O4 requires one stress case (income drop or rate rise); chose income drop as the more universally relevant risk across income types.",
+    "source": "our judgement"
+  },
+  "neededEmiRateStrategy": {
+    "strategy": "low",
+    "why": "Using the optimistic/low end of the assumed rate band to compute the EMI needed for the requested amount, rather than the midpoint or conservative high end.",
+    "source": "our judgement"
+  }
+}
