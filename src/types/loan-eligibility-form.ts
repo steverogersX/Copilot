@@ -141,6 +141,7 @@ const baseLoanFormSchema = z.object({
   collateralValue: z.string(),
   collateralAlreadyPledged: yesNoOptional,
   collateralOutstandingAmount: z.string(),
+  collateralInterestRate: z.string(),
 });
 
 export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
@@ -198,16 +199,28 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
         path: ["collateralValue"],
       });
     }
-    if (
-      data.collateralAlreadyPledged === "yes" &&
-      (!data.collateralOutstandingAmount ||
-        Number(data.collateralOutstandingAmount) <= 0)
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Enter the outstanding amount on the existing loan",
-        path: ["collateralOutstandingAmount"],
-      });
+    if (data.collateralAlreadyPledged === "yes") {
+      if (
+        !data.collateralOutstandingAmount ||
+        Number(data.collateralOutstandingAmount) <= 0
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Enter the outstanding amount on the existing loan",
+          path: ["collateralOutstandingAmount"],
+        });
+      }
+      if (
+        !data.collateralInterestRate ||
+        Number(data.collateralInterestRate) <= 0 ||
+        Number(data.collateralInterestRate) > 100
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Enter a valid interest rate",
+          path: ["collateralInterestRate"],
+        });
+      }
     }
   }
 });

@@ -66,6 +66,7 @@ const defaultValues: LoanFormValues = {
   collateralValue: "",
   collateralAlreadyPledged: "",
   collateralOutstandingAmount: "",
+  collateralInterestRate: "",
 };
 
 const fieldWrapper = "flex flex-col gap-1.5";
@@ -610,42 +611,79 @@ export default function LoanEligibilityForm() {
                             />
 
                             {pledgedField.state.value === "yes" && (
-                              <form.Field name="collateralOutstandingAmount">
-                                {(outstandingField) => (
-                                  <div
-                                    className={`${fieldWrapper} mt-1 sm:max-w-[50%]`}
-                                  >
-                                    <Label htmlFor={outstandingField.name}>
-                                      Outstanding amount on that existing loan
-                                      <Required />
-                                    </Label>
-                                    <Input
-                                      id={outstandingField.name}
-                                      name={outstandingField.name}
-                                      type="number"
-                                      min={1}
-                                      inputMode="numeric"
-                                      placeholder="e.g. 500000"
-                                      value={outstandingField.state.value}
-                                      onBlur={outstandingField.handleBlur}
-                                      onKeyDown={blockNonDigitKeys}
-                                      onChange={(e) =>
-                                        outstandingField.handleChange(
-                                          onlyDigits(e.target.value)
-                                        )
-                                      }
-                                    />
-                                    {outstandingField.state.meta.errors
-                                      .length > 0 && (
-                                      <p className={errorClass}>
-                                        {outstandingField.state.meta.errors.join(
-                                          ", "
-                                        )}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                              </form.Field>
+                              <div className={`${gridTwo} mt-1`}>
+                                <form.Field name="collateralOutstandingAmount">
+                                  {(outstandingField) => (
+                                    <div className={fieldWrapper}>
+                                      <Label htmlFor={outstandingField.name}>
+                                        Outstanding amount
+                                        <Required />
+                                      </Label>
+                                      <Input
+                                        id={outstandingField.name}
+                                        name={outstandingField.name}
+                                        type="number"
+                                        min={1}
+                                        inputMode="numeric"
+                                        placeholder="e.g. 500000"
+                                        value={outstandingField.state.value}
+                                        onBlur={outstandingField.handleBlur}
+                                        onKeyDown={blockNonDigitKeys}
+                                        onChange={(e) =>
+                                          outstandingField.handleChange(
+                                            onlyDigits(e.target.value)
+                                          )
+                                        }
+                                      />
+                                      {outstandingField.state.meta.errors
+                                        .length > 0 && (
+                                        <p className={errorClass}>
+                                          {outstandingField.state.meta.errors.join(
+                                            ", "
+                                          )}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </form.Field>
+
+                                <form.Field name="collateralInterestRate">
+                                  {(rateField) => (
+                                    <div className={fieldWrapper}>
+                                      <Label htmlFor={rateField.name}>
+                                        Interest rate (% p.a.)
+                                        <Required />
+                                      </Label>
+                                      <Input
+                                        id={rateField.name}
+                                        name={rateField.name}
+                                        type="number"
+                                        min={0.01}
+                                        max={100}
+                                        step={0.01}
+                                        inputMode="decimal"
+                                        placeholder="e.g. 9.5"
+                                        value={rateField.state.value}
+                                        onBlur={rateField.handleBlur}
+                                        onKeyDown={blockNonDecimalKeys}
+                                        onChange={(e) =>
+                                          rateField.handleChange(
+                                            onlyDecimalDigits(e.target.value)
+                                          )
+                                        }
+                                      />
+                                      {rateField.state.meta.errors.length >
+                                        0 && (
+                                        <p className={errorClass}>
+                                          {rateField.state.meta.errors.join(
+                                            ", "
+                                          )}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </form.Field>
+                              </div>
                             )}
                           </div>
                         )}
