@@ -129,14 +129,15 @@ function calculateApr(
 }
 
 export function engine(formData: LoanFormValues): EligibilityResult | null {
-  // Scoped for now: salaried or self-employed income + personal loan only.
+  // Scoped for now: the only unsupported combination is a business loan for
+  // an informal-income borrower (informal income has no superRefine/math
+  // support yet - see the TODO on loanFormSchema).
   if (
-    (formData.incomeType !== IncomeType.Salaried &&
-      formData.incomeType !== IncomeType.SelfEmployed) ||
-    formData.loanType !== LoanType.Personal
+    formData.loanType === LoanType.Business &&
+    formData.incomeType === IncomeType.Informal
   ) {
     console.log(
-      "engine: unsupported combination for now (only personal loan supported; business/LAP and two-wheeler rate bands not yet researched)"
+      "engine: unsupported combination for now (business loan + informal income)"
     );
     return null;
   }
