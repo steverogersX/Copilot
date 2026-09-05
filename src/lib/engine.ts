@@ -136,7 +136,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     formData.loanType !== LoanType.Personal
   ) {
     console.log(
-      "engine: unsupported combination for now (only salaried/self-employed + personal loan)"
+      "engine: unsupported combination for now (only personal loan supported; business/LAP and two-wheeler rate bands not yet researched)"
     );
     return null;
   }

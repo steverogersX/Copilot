@@ -1,26 +1,22 @@
 import { z } from "zod";
 
-// TODO: per the brief, only Personal, Business/LAP, and Two-wheeler/EV are
-// needed (Priya, Ravi, Anita). Home/Car/Education/Gold are broader than the
-// brief's scope and should probably be trimmed before submission - not
-// removed yet since the exact Business/LAP and Two-wheeler enum values
-// haven't been confirmed.
+// What the borrower is applying for RIGHT NOW - scoped to exactly the three
+// loan products the personas need (Priya: personal, Ravi: business/LAP,
+// Anita: two-wheeler/EV). "Breadth of loan products" beyond this is
+// explicitly Not Scored per the brief, so this stays deliberately narrow.
 export enum LoanType {
   Personal = "Personal",
-  Home = "Home",
-  Car = "Car",
-  Education = "Education",
-  Business = "Business",
-  Gold = "Gold",
+  Business = "Business", // Business loan / Loan Against Property - engine
+  // should reason toward the secured (LAP) route
+  // when collateral is present, per brief: "Is Ravi
+  // routed to a secured product?"
+  TwoWheeler = "TwoWheeler",
 }
 
 export const LOAN_TYPE_LABELS: Record<LoanType, string> = {
   [LoanType.Personal]: "Personal Loan",
-  [LoanType.Home]: "Home Loan",
-  [LoanType.Car]: "Car Loan",
-  [LoanType.Education]: "Education Loan",
-  [LoanType.Business]: "Business Loan",
-  [LoanType.Gold]: "Gold Loan",
+  [LoanType.Business]: "Business Loan / Loan Against Property",
+  [LoanType.TwoWheeler]: "Two-Wheeler / EV Loan",
 };
 
 export enum IncomeType {
