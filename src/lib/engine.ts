@@ -539,11 +539,23 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         existingObligations
       )}).`;
 
-  const lenderLikelyReason = `Based on a lender's ${rules.foir.capPercent}% FOIR cap applied to your ${
-    usesIncomeStabilityRange ? "average" : "net"
-  } monthly income (~₹${Math.round(
-    lenderFacingIncome
-  )}), minus your existing obligations (~₹${Math.round(existingObligations)}).`;
+  // finalLenderLikelyAmount takes the max of the income-based (FOIR) and
+  // collateral-based paths whenever routed to a secured product - the
+  // reason string has to say which one actually won, not always describe
+  // the income path regardless of which number is being shown.
+  const collateralPathWon =
+    routedToSecuredProduct && collateralBasedLenderAmount >= lenderLikelyAmount;
+  const lenderLikelyReason = collateralPathWon
+    ? `Based on your unencumbered collateral (~₹${Math.round(
+        usableCollateralValue
+      )}) at a typical ${rules.collateral.ltvPercent}% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹${Math.round(
+        lenderLikelyAmount
+      )}) would support on its own.`
+    : `Based on a lender's ${rules.foir.capPercent}% FOIR cap applied to your ${
+        usesIncomeStabilityRange ? "average" : "net"
+      } monthly income (~₹${Math.round(
+        lenderFacingIncome
+      )}), minus your existing obligations (~₹${Math.round(existingObligations)}).`;
 
   const loanTypeLabel = LOAN_TYPE_LABELS[formData.loanType as LoanType];
   const rateReason = routedToSecuredProduct
