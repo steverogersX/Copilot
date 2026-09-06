@@ -16,11 +16,23 @@ in the math traces back to a row in this table.
 | FOIR cap | 50% | Industry-cited ideal FOIR range is 40-50%; using the upper bound as a single assumed cap. | Poonawalla Fincorp, L&T Finance, IndusInd Bank (mid-2026); my judgement within the cited range |
 | Retirement age — salaried | 60 | Approximate lender-cap convention for loan-end age by income type. | my judgement, typical lender practice |
 | Retirement age — self-employed | 65 | Approximate lender-cap convention for loan-end age by income type. | my judgement, typical lender practice |
-| Rate band — credit score 750+ | 9.99%–11%, confidence: high | Personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
-| Rate band — credit score 700–749 | 11%–16%, confidence: high | Personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
-| Rate band — credit score 650–699 | 16%–22%, confidence: medium | Personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
-| Rate band — credit score 0–649 | 22%–30%, confidence: medium | Personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
-| Rate band — credit score unknown | 14%–24%, confidence: low | Never default an unknown credit score to worst-case or best-case; use the widest band with low confidence instead. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Personal loan rate band — credit score 750+ | 9.99%–11%, confidence: high | Unsecured personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Personal loan rate band — credit score 700–749 | 11%–16%, confidence: high | Unsecured personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Personal loan rate band — credit score 650–699 | 16%–22%, confidence: medium | Unsecured personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Personal loan rate band — credit score 0–649 | 22%–30%, confidence: medium | Unsecured personal-loan rate tiers by credit score bucket. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Personal loan rate band — credit score unknown | 14%–24%, confidence: low | Never default an unknown credit score to worst-case or best-case; use the widest band with low confidence instead. | Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment) |
+| Business loan rate band — credit score 750+ | 14%–18%, confidence: medium | Unsecured business-loan rate tiers by credit score bucket; runs higher than personal loans and varies more by lender type. | DMI Finance, FlexiLoans, Shardaassociates, IIFL (mid-2026); overall observed range ~8%–26% across lender types, narrowed to a usable band |
+| Business loan rate band — credit score 700–749 | 16%–22%, confidence: medium | Unsecured business-loan rate tiers by credit score bucket. | DMI Finance, FlexiLoans, Shardaassociates, IIFL (mid-2026) |
+| Business loan rate band — credit score 0–699 | 20%–26%, confidence: low | Unsecured business-loan rate tiers by credit score bucket. | DMI Finance, FlexiLoans, Shardaassociates, IIFL (mid-2026) |
+| Business loan rate band — credit score unknown | 14%–26%, confidence: low | Never default an unknown credit score to worst-case or best-case; use the widest band with low confidence instead. | DMI Finance, FlexiLoans, Shardaassociates, IIFL (mid-2026) |
+| LAP (secured) rate band — credit score 750+ | 9%–11%, confidence: high | Loan Against Property is secured, so rates run well below unsecured personal/business loans. | Poonawalla Fincorp, BankBazaar, HDFC Bank, Central Bank of India (mid-2026) |
+| LAP (secured) rate band — credit score 700–749 | 11%–14%, confidence: medium | LAP rate tiers by credit score bucket. | Poonawalla Fincorp, BankBazaar, HDFC Bank, Central Bank of India (mid-2026) |
+| LAP (secured) rate band — credit score 0–699 | 13%–17%, confidence: low | LAP rate tiers by credit score bucket. | Poonawalla Fincorp, BankBazaar, HDFC Bank, Central Bank of India (mid-2026) |
+| LAP (secured) rate band — credit score unknown | 9%–17%, confidence: low | Never default an unknown credit score to worst-case or best-case; use the widest band with low confidence instead. | Poonawalla Fincorp, BankBazaar, HDFC Bank, Central Bank of India (mid-2026) |
+| Two-wheeler/EV rate band — credit score 750+ | 10%–12%, confidence: medium | EV-specific two-wheeler rate tiers by credit score bucket. | meraev.com (EV-specific, mid-2026); corroborated by BankBazaar general two-wheeler listings (mid-2026) |
+| Two-wheeler/EV rate band — credit score 700–749 | 11%–14%, confidence: medium | Two-wheeler/EV rate tiers by credit score bucket. | meraev.com (mid-2026); BankBazaar |
+| Two-wheeler/EV rate band — credit score 0–699 | 14%–18%, confidence: low | Two-wheeler/EV rate tiers by credit score bucket. | meraev.com (mid-2026); BankBazaar |
+| Two-wheeler/EV rate band — credit score unknown | 11%–16%, confidence: low | Never default an unknown credit score to worst-case or best-case; use the widest band with low confidence instead. | meraev.com (mid-2026); BankBazaar |
 | Processing fee | 1%–3% of principal | Market-observed range is 0.5%–5%; using a mid-range band, not the extremes. | Paisabazaar, DMI Finance, BankBazaar (mid-2026) |
 | GST on processing fee | 18% | Statutory GST rate applied on top of the processing fee. | Paisabazaar, DMI Finance, BankBazaar (mid-2026) |
 | Bounce override recency window | 3 months | A single old/isolated bounce should not auto-reject; only a RECENT bounce combined with high-cost debt should override the math. | my judgement |
@@ -28,7 +40,6 @@ in the math traces back to a row in this table.
 | Needed-EMI rate strategy | low end of the rate band | Uses the optimistic/low end of the assumed rate band to compute the EMI needed for the requested amount, rather than the midpoint or the conservative high end. | my judgement |
 | Self-employed new-business confidence threshold | 2 years in business | Confidence-only modifier — does not affect core affordability math. A newer business carries more income-continuity uncertainty over the loan's tenure. | my judgement |
 | Collateral LTV (loan-to-value) | 60% | Typical LAP lending ceiling as a share of usable (unencumbered) property value. | my judgement, informed by typical LAP industry practice (50%–70% LTV range observed) |
-| Secured (LAP) rate band | 9%–12%, confidence: medium | Secured loans carry lower rates than unsecured personal/business loans since lender risk is covered by the pledged asset. | my judgement; needs a web-verification pass before final submission — see §3 |
 
 ## 2. Logic and branching rules
 
@@ -134,9 +145,10 @@ partial or mostly-used-up collateral does not trigger the secured
 recommendation just because *some* collateral exists.
 
 When routed:
-- The **lender-facing** rate band switches to the secured rate band (9%–12%),
-  and `lenderLikely` becomes the larger of the income-based FOIR ceiling and
-  the collateral-based ceiling.
+- The **lender-facing** rate band switches to the LAP rate band (9%–17%,
+  tiered by credit score — see §1), regardless of which loan type the
+  borrower originally applied under, and `lenderLikely` becomes the larger of
+  the income-based FOIR ceiling and the collateral-based ceiling.
 - **`safeToCarry` is completely unaffected.** It is computed purely from
   income/expenses/existing obligations, before the collateral routing
   decision is even made, and nothing about collateral or the secured rate
@@ -166,6 +178,21 @@ computed (which would solve for the rate that equates fee + interest cash
 flows to the loan schedule). It is disclosed here as a documented
 approximation rather than presented as a precise APR.
 
+### Loan-type-specific rate bands
+
+`getRateBand()` selects one of four rate tables — personal, business, LAP
+(secured), or two-wheeler/EV — based on the loan type being applied for, each
+independently tiered by credit score with its own "unknown score" fallback.
+Business and two-wheeler applicants are no longer priced off the personal-loan
+table; each product's own researched market range is used instead.
+
+**Why a separate override for the secured path:** the loan-type table only
+decides pricing for the *unsecured* line of the application. Once collateral
+routing (above) determines the borrower qualifies for a secured product, the
+rate band is looked up again from the LAP table instead — the original loan
+type (Business, Personal, or TwoWheeler) is irrelevant to pricing once the
+loan becomes secured.
+
 ### No verification, no ITR usage
 
 All income figures — for salaried, self-employed, and informal borrowers
@@ -184,12 +211,12 @@ loan they want right now.
 
 ## 3. What this app does not know / where it is guessing
 
-- **Business/LAP and Two-wheeler/EV rate bands have not been researched.**
-  The only rate bands verified against live market sources are the unsecured
-  personal-loan tiers. The secured (LAP) rate band (9%–12%) is an *unverified
-  placeholder* pending a dedicated web-research pass — flagged explicitly in
-  `rules.json`'s own `source` field as "needs web-verification pass before
-  final submission."
+- **Business, LAP, and two-wheeler/EV rate bands are sourced from published
+  market listings, not from actual lender API quotes.** Unlike the personal-
+  loan tiers, these three tables have not been cross-checked against as many
+  independent sources, and the two-wheeler table specifically anchors to
+  EV-specific data (general non-electric two-wheeler loans span a wider,
+  less-tiered 7.6%–28% range that this app does not separately model).
 - **Derived average income (midpoint of low/high) assumes an even spread.**
   A borrower with mostly-low months and a rare high spike would have a true
   average meaningfully below this midpoint — the app has no way to detect or

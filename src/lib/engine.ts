@@ -1,6 +1,7 @@
 import {
   EmiBounceRecency,
   IncomeType,
+  LOAN_TYPE_LABELS,
   LoanType,
   type LoanFormValues,
 } from "@/types/loan-eligibility-form";
@@ -35,7 +36,9 @@ export type EligibilityResult = {
   };
   o2: {
     lenderLikely: number;
+    lenderLikelyReason: string;
     safeToCarry: number;
+    safeToCarryReason: string;
     routedToSecuredProduct: boolean;
     securedProductNote: string | null;
   };
@@ -45,6 +48,8 @@ export type EligibilityResult = {
     aprBandLow: number;
     aprBandHigh: number;
     confidence: Confidence;
+    rateReason: string;
+    confidenceReason: string;
   };
   o4: {
     emiCeiling: number;
@@ -78,30 +83,49 @@ function calculateMaxPrincipal(
   return (maxEmi * (factor - 1)) / (monthlyRate * factor);
 }
 
-// Rate bands by credit tier - values come from rules.json (rules.rateBands),
-// not hardcoded here, so they can be reviewed/tuned without a code change.
-function getRateBand(
+type RateBandTable = typeof rules.personalLoanRateBands;
+
+// Shared lookup against any of the loan-type-specific rate tables below.
+function lookupRateBand(
+  table: RateBandTable,
   creditScore: number | null
 ): { low: number; high: number; confidence: Confidence } {
   if (creditScore === null) {
     // Unknown is never zero - widest band, flagged low confidence. §3
     return {
-      low: rules.rateBands.unknown.lowPercent,
-      high: rules.rateBands.unknown.highPercent,
-      confidence: rules.rateBands.unknown.confidence as Confidence,
+      low: table.unknown.lowPercent,
+      high: table.unknown.highPercent,
+      confidence: table.unknown.confidence as Confidence,
     };
   }
-  const tier = rules.rateBands.tiers.find(
+  const tier = table.tiers.find(
     (t) =>
       creditScore >= t.minScore &&
       (t.maxScore === null || creditScore <= t.maxScore)
   );
-  const matched = tier ?? rules.rateBands.tiers[rules.rateBands.tiers.length - 1];
+  const matched = tier ?? table.tiers[table.tiers.length - 1];
   return {
     low: matched.lowPercent,
     high: matched.highPercent,
     confidence: matched.confidence as Confidence,
   };
+}
+
+// Rate bands are loan-type-specific - unsecured personal, unsecured business,
+// LAP (secured), and two-wheeler each carry a materially different market
+// rate, so each gets its own tiers-by-credit-score table from rules.json
+// rather than sharing one table.
+function getRateBand(
+  creditScore: number | null,
+  loanType: LoanType
+): { low: number; high: number; confidence: Confidence } {
+  const table =
+    loanType === LoanType.Business
+      ? rules.businessLoanRateBands
+      : loanType === LoanType.TwoWheeler
+        ? rules.twoWheelerRateBands
+        : rules.personalLoanRateBands;
+  return lookupRateBand(table, creditScore);
 }
 
 // One-level confidence downgrade (High->Medium, Medium->Low, Low stays Low).
@@ -225,11 +249,21 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       },
       o2: {
         lenderLikely: 0,
+        lenderLikelyReason: "No obligations were computed since expenses and existing EMIs already exceed your income.",
         safeToCarry: 0,
+        safeToCarryReason: "Your existing expenses and EMIs already use up all your take-home income, leaving no safe room for a new one.",
         routedToSecuredProduct: false,
         securedProductNote: null,
       },
-      o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
+      o3: {
+        rateBandLow: 0,
+        rateBandHigh: 0,
+        aprBandLow: 0,
+        aprBandHigh: 0,
+        confidence: Confidence.Low,
+        rateReason: "No rate applies since no new loan is recommended.",
+        confidenceReason: "Not applicable — no new loan is recommended.",
+      },
       o4: {
         emiCeiling: 0,
         stressCaseEmiCeiling: 0,
@@ -257,12 +291,22 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
           } borrowers - there's no valid tenure left to offer a loan against.`,
         },
         o2: {
-        lenderLikely: 0,
-        safeToCarry: 0,
-        routedToSecuredProduct: false,
-        securedProductNote: null,
-      },
-        o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
+          lenderLikely: 0,
+          lenderLikelyReason: "No amount is offered since no valid tenure remains before retirement age.",
+          safeToCarry: 0,
+          safeToCarryReason: "No amount is safe to carry since no valid tenure remains before retirement age.",
+          routedToSecuredProduct: false,
+          securedProductNote: null,
+        },
+        o3: {
+          rateBandLow: 0,
+          rateBandHigh: 0,
+          aprBandLow: 0,
+          aprBandHigh: 0,
+          confidence: Confidence.Low,
+          rateReason: "No rate applies since no new loan is recommended.",
+          confidenceReason: "Not applicable — no new loan is recommended.",
+        },
         o4: {
           emiCeiling: 0,
           stressCaseEmiCeiling: 0,
@@ -299,11 +343,21 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       },
       o2: {
         lenderLikely: 0,
+        lenderLikelyReason: "No amount is offered since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.",
         safeToCarry: 0,
+        safeToCarryReason: "No amount is safe to carry since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.",
         routedToSecuredProduct: false,
         securedProductNote: null,
       },
-      o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
+      o3: {
+        rateBandLow: 0,
+        rateBandHigh: 0,
+        aprBandLow: 0,
+        aprBandHigh: 0,
+        confidence: Confidence.Low,
+        rateReason: "No rate applies since no new loan is recommended.",
+        confidenceReason: "Not applicable — no new loan is recommended.",
+      },
       o4: {
         emiCeiling: 0,
         stressCaseEmiCeiling: 0,
@@ -328,7 +382,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   // 6. Calculate the EMI needed for the requested amount, using whichever
   // point on the rate band rules.neededEmiRateStrategy.strategy selects.
   const creditScore = formData.creditScore ? Number(formData.creditScore) : null;
-  const rateBand = getRateBand(creditScore);
+  const rateBand = getRateBand(creditScore, formData.loanType as LoanType);
   const assumedRate =
     rules.neededEmiRateStrategy.strategy === "midpoint"
       ? (rateBand.low + rateBand.high) / 2
@@ -396,12 +450,10 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   const routedToSecuredProduct =
     hasCollateral && collateralBasedLenderAmount >= amountWanted;
 
+  // A borrower routed to a secured product gets LAP pricing regardless of
+  // which loan type they originally applied under.
   const effectiveRateBand = routedToSecuredProduct
-    ? {
-        low: rules.securedRate.lowPercent,
-        high: rules.securedRate.highPercent,
-        confidence: rules.securedRate.confidence as Confidence,
-      }
+    ? lookupRateBand(rules.lapRateBands, creditScore)
     : rateBand;
 
   const finalLenderLikelyAmount = routedToSecuredProduct
@@ -451,12 +503,56 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       stressCaseEmiCeiling
     )} - plan for this before committing to the top of your range.`;
 
+  // 11. Explainability - every O2/O3 number gets its own one-sentence
+  // traceability string, generated here (not in the UI) so reasoning stays
+  // alongside the math it explains rather than scattered into components.
+  const safeToCarryReason = usesIncomeStabilityRange
+    ? `Based on your lowest-earning month (~₹${Math.round(
+        monthlyIncomeForMath
+      )}), minus your monthly expenses (₹${formData.monthlyExpenses}) and existing obligations (~₹${Math.round(
+        existingObligations
+      )}) — using your worst month, not your average, keeps this figure safe.`
+    : `Based on your net monthly income (₹${formData.netMonthlyIncome}), minus your monthly expenses (₹${formData.monthlyExpenses}) and existing obligations (~₹${Math.round(
+        existingObligations
+      )}).`;
+
+  const lenderLikelyReason = `Based on a lender's ${rules.foir.capPercent}% FOIR cap applied to your ${
+    usesIncomeStabilityRange ? "average" : "net"
+  } monthly income (~₹${Math.round(
+    lenderFacingIncome
+  )}), minus your existing obligations (~₹${Math.round(existingObligations)}).`;
+
+  const loanTypeLabel = LOAN_TYPE_LABELS[formData.loanType as LoanType];
+  const rateReason = routedToSecuredProduct
+    ? `Because your unencumbered collateral covers the amount you want, this is priced as a secured Loan Against Property${
+        creditScore !== null ? ` for a credit score of ${creditScore}` : ""
+      } instead of an unsecured ${loanTypeLabel.toLowerCase()}.`
+    : creditScore !== null
+      ? `Based on your credit score of ${creditScore} and applying for a ${loanTypeLabel.toLowerCase()}.`
+      : `Your credit score wasn't provided, so the widest rate band for a ${loanTypeLabel.toLowerCase()} is used.`;
+
+  const confidenceReasonParts: string[] = [];
+  if (creditScore === null) {
+    confidenceReasonParts.push("your credit score wasn't provided");
+  }
+  if (isNewBusiness) {
+    confidenceReasonParts.push(
+      "you've been earning this way for less than 2 years, which adds income-continuity uncertainty"
+    );
+  }
+  const confidenceReason =
+    confidenceReasonParts.length > 0
+      ? `Lower confidence because ${confidenceReasonParts.join(" and ")}.`
+      : "Based on your credit score and reported financial profile.";
+
   return {
     tenureAdjustmentNote,
     o1: { verdict, reason },
     o2: {
       lenderLikely: Math.round(finalLenderLikelyAmount),
+      lenderLikelyReason,
       safeToCarry: Math.round(safeToCarryAmount),
+      safeToCarryReason,
       routedToSecuredProduct,
       securedProductNote,
     },
@@ -466,6 +562,8 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       aprBandLow: Math.round(aprBandLow * 100) / 100,
       aprBandHigh: Math.round(aprBandHigh * 100) / 100,
       confidence: reportedConfidence,
+      rateReason,
+      confidenceReason,
     },
     o4: {
       emiCeiling: Math.round(recommendedEmiCeiling),

@@ -12,6 +12,20 @@ const rateBandTierSchema = z
     message: "highPercent must be >= lowPercent",
   });
 
+// Shared shape for every loan-type-specific rate table (personal, business,
+// LAP, two-wheeler) - same tiers-by-credit-score + unknown-score fallback
+// structure, just different values per table.
+const rateBandTableSchema = z.object({
+  tiers: z.array(rateBandTierSchema).min(1),
+  unknown: z.object({
+    lowPercent: z.number().positive(),
+    highPercent: z.number().positive(),
+    confidence: z.enum(["low", "medium", "high"]),
+  }),
+  why: z.string(),
+  source: z.string(),
+});
+
 export const rulesSchema = z.object({
   foir: z.object({
     capPercent: z.number().min(0).max(100),
@@ -24,16 +38,10 @@ export const rulesSchema = z.object({
     why: z.string(),
     source: z.string(),
   }),
-  rateBands: z.object({
-    tiers: z.array(rateBandTierSchema).min(1),
-    unknown: z.object({
-      lowPercent: z.number().positive(),
-      highPercent: z.number().positive(),
-      confidence: z.enum(["low", "medium", "high"]),
-    }),
-    why: z.string(),
-    source: z.string(),
-  }),
+  personalLoanRateBands: rateBandTableSchema,
+  businessLoanRateBands: rateBandTableSchema,
+  lapRateBands: rateBandTableSchema,
+  twoWheelerRateBands: rateBandTableSchema,
   processingFee: z.object({
     lowPercent: z.number().min(0),
     highPercent: z.number().min(0),
@@ -63,13 +71,6 @@ export const rulesSchema = z.object({
   }),
   collateral: z.object({
     ltvPercent: z.number().min(0).max(100),
-    why: z.string(),
-    source: z.string(),
-  }),
-  securedRate: z.object({
-    lowPercent: z.number().positive(),
-    highPercent: z.number().positive(),
-    confidence: z.enum(["low", "medium", "high"]),
     why: z.string(),
     source: z.string(),
   }),

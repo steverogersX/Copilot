@@ -10,7 +10,7 @@
     "why": "Approximate lender-cap convention for loan-end age by income type. Only 'salaried' is wired into the engine so far.",
     "source": "our judgement, typical lender practice"
   },
-  "rateBands": {
+  "personalLoanRateBands": {
     "tiers": [
       { "minScore": 750, "maxScore": null, "lowPercent": 9.99, "highPercent": 11, "confidence": "high" },
       { "minScore": 700, "maxScore": 749, "lowPercent": 11, "highPercent": 16, "confidence": "high" },
@@ -20,6 +20,36 @@
     "unknown": { "lowPercent": 14, "highPercent": 24, "confidence": "low" },
     "why": "Never default unknown credit score to worst-case or best-case; widest band + low confidence instead.",
     "source": "Finance Buddha, OnePaisa, FinanceFunda, Paisabazaar (mid-2026, personal loan segment)"
+  },
+  "businessLoanRateBands": {
+    "tiers": [
+      { "minScore": 750, "maxScore": null, "lowPercent": 14, "highPercent": 18, "confidence": "medium" },
+      { "minScore": 700, "maxScore": 749, "lowPercent": 16, "highPercent": 22, "confidence": "medium" },
+      { "minScore": 0, "maxScore": 699, "lowPercent": 20, "highPercent": 26, "confidence": "low" }
+    ],
+    "unknown": { "lowPercent": 14, "highPercent": 26, "confidence": "low" },
+    "why": "Unsecured business loan rates run higher than personal loans and vary more by lender type (PSU banks lower, NBFCs/digital lenders higher). Tiered by credit score using the same relative spread logic as the personal-loan table, anchored to the observed overall market range.",
+    "source": "DMI Finance, FlexiLoans, Shardaassociates, IIFL (mid-2026); overall observed range roughly 8-26% across lender types, narrowed here to a usable band"
+  },
+  "lapRateBands": {
+    "tiers": [
+      { "minScore": 750, "maxScore": null, "lowPercent": 9, "highPercent": 11, "confidence": "high" },
+      { "minScore": 700, "maxScore": 749, "lowPercent": 11, "highPercent": 14, "confidence": "medium" },
+      { "minScore": 0, "maxScore": 699, "lowPercent": 13, "highPercent": 17, "confidence": "low" }
+    ],
+    "unknown": { "lowPercent": 9, "highPercent": 17, "confidence": "low" },
+    "why": "Loan Against Property is secured, so rates run well below unsecured business/personal loans. This replaces the earlier unverified 'securedRate' placeholder (9-12%) added in the collateral-logic change.",
+    "source": "Poonawalla Fincorp, BankBazaar, HDFC Bank, Central Bank of India (mid-2026); market range converges around 9-14% for good credit profiles"
+  },
+  "twoWheelerRateBands": {
+    "tiers": [
+      { "minScore": 750, "maxScore": null, "lowPercent": 10, "highPercent": 12, "confidence": "medium" },
+      { "minScore": 700, "maxScore": 749, "lowPercent": 11, "highPercent": 14, "confidence": "medium" },
+      { "minScore": 0, "maxScore": 699, "lowPercent": 14, "highPercent": 18, "confidence": "low" }
+    ],
+    "unknown": { "lowPercent": 11, "highPercent": 16, "confidence": "low" },
+    "why": "Electric two-wheeler loans specifically observed at 11-16% p.a. - used as the base band since two of our three personas' loan types are EV/two-wheeler. General (non-electric) two-wheeler loans span a wider 7.6-28% range depending heavily on lender tier; this table reflects the EV-specific, better-sourced figure.",
+    "source": "meraev.com (EV-specific, mid-2026); corroborated by general two-wheeler market data from BankBazaar (Axis, ICICI, SBI, HDFC listings, mid-2026)"
   },
   "processingFee": {
     "lowPercent": 1,
@@ -52,12 +82,5 @@
     "ltvPercent": 60,
     "why": "Typical LAP lending ceiling as a share of usable (unencumbered) property value.",
     "source": "our judgement, informed by typical LAP industry practice (50-70% LTV range observed)"
-  },
-  "securedRate": {
-    "lowPercent": 9,
-    "highPercent": 12,
-    "confidence": "medium",
-    "why": "Secured loans (LAP) carry lower rates than unsecured personal/business loans since lender risk is covered by the pledged asset. Not yet verified against live market data the way the unsecured personal-loan band was - documented estimate pending verification.",
-    "source": "our judgement; needs web-verification pass before final submission"
   }
 }

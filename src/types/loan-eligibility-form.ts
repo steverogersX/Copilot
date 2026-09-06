@@ -15,7 +15,7 @@ export enum LoanType {
 
 export const LOAN_TYPE_LABELS: Record<LoanType, string> = {
   [LoanType.Personal]: "Personal Loan",
-  [LoanType.Business]: "Business Loan / Loan Against Property",
+  [LoanType.Business]: "Business Loan",
   [LoanType.TwoWheeler]: "Two-Wheeler / EV Loan",
 };
 

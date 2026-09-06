@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { useForm } from "@tanstack/react-form";
-import { engine } from "@/lib/engine";
+import { engine, type EligibilityResult } from "@/lib/engine";
+import { NegotiationCard } from "@/components/negotiation-card";
 import {
   Card,
   CardContent,
@@ -179,13 +181,17 @@ function RemoveRowButton({
 }
 
 export default function LoanEligibilityForm() {
+  const [result, setResult] = useState<EligibilityResult | null | undefined>(
+    undefined
+  );
+
   const form = useForm({
     defaultValues,
     validators: {
       onSubmit: loanFormSchema,
     },
     onSubmit: async ({ value }) => {
-      engine(value);
+      setResult(engine(value));
     },
   });
 
@@ -413,6 +419,16 @@ export default function LoanEligibilityForm() {
           it takes about three minutes.
         </p>
       </div>
+
+      {result !== undefined &&
+        (result === null ? (
+          <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
+            We don&apos;t yet support this combination of loan type and
+            income type — see README for current scope.
+          </div>
+        ) : (
+          <NegotiationCard result={result} />
+        ))}
 
       <form
         className="flex flex-col gap-6"
