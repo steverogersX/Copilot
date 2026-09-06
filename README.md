@@ -39,6 +39,8 @@ No environment variables, no database, no backend, no API keys required.
 - `src/components/negotiation-card.tsx` — the Negotiation Card
 - `RULES.md` — every rule, threshold, and assumption with its reasoning and
   source, plus the branching logic and known limitations
+- `WALKTHROUGH.md` — five-minute written walkthrough: what's solid, what's
+  a known simplification, what's next, what I'd cut
 - `src/lib/scenarios.test.ts` — the three persona run-throughs below,
   runnable directly against the engine
 
