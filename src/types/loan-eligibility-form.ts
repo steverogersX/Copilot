@@ -82,14 +82,6 @@ const positiveNumberString = (message: string) =>
     message,
   });
 
-const percentageString = (message: string) =>
-  z
-    .string()
-    .refine(
-      (value) => value !== "" && Number(value) > 0 && Number(value) <= 100,
-      { message }
-    );
-
 const yesNoOptional = z.union([
   z.literal("yes"),
   z.literal("no"),

@@ -43,9 +43,9 @@ applicant with no collateral, and the form never asked.
 > Your requested EMI of ~₹16994 fits within your safe ceiling of ~₹41000.
 
 **O2 — Maximum amount**
-- Lender likely to offer: **₹19,30,127** — Based on a lender's 50% FOIR cap applied to your net monthly income (~₹110000), minus your existing obligations (~₹14000).
+- Lender likely to offer: **₹23,25,568** — Based on a lender's 50% FOIR cap applied to your net monthly income (~₹110000), minus your existing obligations (~₹5600, weighted down for EMIs that will finish before this loan's tenure ends).
 - Safe to carry: **₹19,30,127** — Based on your net monthly income (₹110000), minus your monthly expenses (₹28000) and existing obligations (~₹14000).
-- *These two figures match here because the lender's own FOIR limit is tighter than your personal budget - the FOIR cap is doing the limiting in both cases, not a coincidence.*
+- *No match note here — the lender ceiling and safe ceiling now use genuinely different obligation totals (her car EMI's remaining 24 months are weighted down for the lender-facing figure, but count in full for the safe figure, since she pays it in full every month regardless), so the two numbers differ rather than coincidentally landing on the same figure.*
 
 **O3 — Fair rate**
 - Rate band: 9.99% – 11%
@@ -189,15 +189,18 @@ underlying field.
 **O1 — Don't borrow**
 > You have a recently bounced EMI together with existing high-cost debt - this combination is real-world evidence of financial strain that overrides the affordability math, regardless of how comfortable the numbers look on paper.
 
+**What would change this**
+> Your ₹35000 high-cost debt at 30% p.a. is costing you roughly ₹3412/month. Clearing or refinancing it, and going 3+ months without a new bounce, would lift this override on its own.
+
 **O2 — Maximum amount**
 - Lender likely to offer: **₹0** — No amount is offered since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.
 - Safe to carry: **₹0** — No amount is safe to carry since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.
 
 **O3 — Fair rate**
-- Rate band: 0% – 0%
-- All-in APR: 0% – 0%
+- Rate band: 11% – 16%
+- All-in APR: 11.59% – 17.77%
 - Confidence: **Low** — Not applicable — no new loan is recommended.
-- No rate applies since no new loan is recommended.
+- Shown for reference only, not a recommendation - no new loan is advised right now. This is the typical rate band for a two-wheeler / ev loan at your credit profile.
 
 **O4 — EMI ceiling**
 - Don't exceed: **₹0/month**
@@ -211,7 +214,22 @@ underlying field.
 
 ## Regression check
 
-All three outcomes match what was previously validated in this project:
+All three verdicts match what was previously validated in this project:
 **Priya → Borrow**, **Ravi → Borrow less, routed to a secured product**,
 **Anita → Don't borrow via the bounce + high-cost-debt override**. No
-regression to report.
+verdict regression to report.
+
+Three things changed since the numbers were last generated, all
+intentional (see RULES.md for the full reasoning):
+
+- **Priya's two O2 figures now differ** (₹23,25,568 vs. ₹19,30,127, previously
+  both ₹19,30,127). Her car EMI's 24 remaining months (against the new
+  loan's 60-month tenure) are now weighted down for the lender-facing FOIR
+  ceiling only - the safe ceiling still uses the full obligation, since she
+  pays it in full every month regardless of how soon it ends.
+- **Anita's O3 no longer shows 0%–0%.** A "don't borrow" result now surfaces
+  the borrower's real indicative rate band (clearly labelled not-a-
+  recommendation) instead of a null-handling placeholder.
+- **Anita's result now carries an actionable next step** naming the exact
+  monthly cost of her high-cost debt and what would need to change to lift
+  the override - the "don't borrow" verdict is no longer a dead end.

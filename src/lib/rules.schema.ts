@@ -74,6 +74,33 @@ export const rulesSchema = z.object({
     why: z.string(),
     source: z.string(),
   }),
+  monthsRemainingWeighting: z.object({
+    enabled: z.boolean(),
+    why: z.string(),
+    source: z.string(),
+  }),
+  bounceLadder: z.object({
+    singleRecentBounce: z.object({
+      rateBandWidenHighPercentagePoints: z.number().min(0),
+      why: z.string(),
+      source: z.string(),
+    }),
+    multipleRecentOrSpread: z.object({
+      minTotalBounces: z.number().int().positive(),
+      minLoansAffected: z.number().int().positive(),
+      rateBandWidenHighPercentagePoints: z.number().min(0),
+      safeAmountHaircutPercent: z.number().min(0).max(100),
+      extraPerLoanAffectedRateBandWidenPoints: z.number().min(0),
+      extraPerLoanAffectedHaircutPercent: z.number().min(0),
+      why: z.string(),
+      source: z.string(),
+    }),
+  }),
+  highCostDebtRepayment: z.object({
+    assumedTenureMonths: z.number().int().positive(),
+    why: z.string(),
+    source: z.string(),
+  }),
 });
 
 export type Rules = z.infer<typeof rulesSchema>;

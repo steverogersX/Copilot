@@ -82,5 +82,32 @@
     "ltvPercent": 60,
     "why": "Typical LAP lending ceiling as a share of usable (unencumbered) property value.",
     "source": "our judgement, informed by typical LAP industry practice (50-70% LTV range observed)"
+  },
+  "monthsRemainingWeighting": {
+    "enabled": true,
+    "why": "An existing EMI that ends partway through the new loan's tenure doesn't tie up the same average FOIR headroom as one running the new loan's full length - weighting it by how much of the new tenure it actually overlaps gives a more accurate FOIR check. Does NOT apply to freeMoney, since the borrower really does pay the full EMI today regardless of the new loan's tenure.",
+    "source": "our judgement"
+  },
+  "bounceLadder": {
+    "singleRecentBounce": {
+      "rateBandWidenHighPercentagePoints": 2,
+      "why": "One recent, isolated bounce on one loan is a weaker signal than the bounce+high-cost-debt override, but a lender pulling the bureau report will still price it in - downgrade confidence one level and widen the top of the quoted rate band rather than leaving it silently unpenalized.",
+      "source": "our judgement"
+    },
+    "multipleRecentOrSpread": {
+      "minTotalBounces": 2,
+      "minLoansAffected": 2,
+      "rateBandWidenHighPercentagePoints": 5,
+      "safeAmountHaircutPercent": 15,
+      "extraPerLoanAffectedRateBandWidenPoints": 2,
+      "extraPerLoanAffectedHaircutPercent": 5,
+      "why": "Bounces repeated on one loan or spread across several loans are both worse than a single isolated one, and both cross into this tier. But spread-across-loans is worse still than the same bounce count repeated on one loan - it signals money ran out across the board, not a one-off dispute with one lender - so each loan affected beyond the first adds an extra widen/haircut on top of this tier's base values. Widens the rate band further than a single bounce, and also haircuts the safe EMI ceiling itself, not just the quoted rate.",
+      "source": "our judgement"
+    }
+  },
+  "highCostDebtRepayment": {
+    "assumedTenureMonths": 12,
+    "why": "Informal/app-based high-cost loans typically amortize over a short tenure (around a year), not indefinitely - estimating a real repaying EMI over an assumed 12-month tenure (via the same reducing-balance EMI formula used elsewhere) reflects the true monthly burden far better than an interest-only estimate, which understates it.",
+    "source": "our judgement, typical short-term/app-loan tenure"
   }
 }

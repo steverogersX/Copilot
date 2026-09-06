@@ -99,7 +99,7 @@ function TenureQuoteCheck({ result }: { result: EligibilityResult }) {
 }
 
 export function NegotiationCard({ result }: { result: EligibilityResult }) {
-  const { o1, o2, o3, o4, tenureAdjustmentNote } = result;
+  const { o1, o2, o3, o4, tenureAdjustmentNote, actionableNextStep } = result;
   const amountsDiffer = o2.lenderLikely !== o2.safeToCarry;
   const VerdictIcon = VERDICT_ICONS[o1.verdict];
 
@@ -116,6 +116,14 @@ export function NegotiationCard({ result }: { result: EligibilityResult }) {
           <p className="rounded-md bg-black/5 px-2 py-1 text-xs opacity-80 dark:bg-white/10">
             {tenureAdjustmentNote}
           </p>
+        )}
+        {actionableNextStep && (
+          <div className="flex flex-col gap-0.5 rounded-md bg-black/5 px-2.5 py-2 dark:bg-white/10">
+            <span className="text-xs font-semibold uppercase tracking-wide opacity-70">
+              What would change this
+            </span>
+            <p className="text-xs leading-snug opacity-90">{actionableNextStep}</p>
+          </div>
         )}
       </div>
 
@@ -195,7 +203,9 @@ export function NegotiationCard({ result }: { result: EligibilityResult }) {
             </div>
           </div>
 
-          <TenureQuoteCheck result={result} />
+          {o1.verdict !== Verdict.DontBorrow && (
+            <TenureQuoteCheck result={result} />
+          )}
         </div>
 
         {/* O4: EMI ceiling */}

@@ -33,8 +33,12 @@ import {
 //   doesn't change this scenario's outcome, but a different assumed age
 //   could have.
 // - `existingEmis[0].monthsRemaining`: the persona states "2 years left"
-//   on the car loan (24 months) - this field is UI-only and isn't read
-//   by the engine's math (only `amount` is summed).
+//   on the car loan (24 months). The engine now weights this against the
+//   new loan's 60-month tenure for the FOIR headroom check only (weight
+//   0.4 = 24/60, so ~₹5,600 of her ₹14,000 EMI counts there) - see
+//   RULES.md's monthsRemaining-weighting section. The UNWEIGHTED ₹14,000
+//   is still what's subtracted for freeMoney/safeToCarry, since she pays
+//   the full EMI today regardless of the new loan's tenure.
 // - `tenurePreferred`: not stated for the new personal loan; 60 months
 //   is used as a typical personal-loan tenure for a large one-off
 //   expense like a wedding.
@@ -163,12 +167,15 @@ export const ravi: LoanFormValues = {
 //   instead of in existingEmis.
 // - `highCostDebtInterestRate`: persona says "30%+" (a lower bound, not
 //   an exact figure) - 30 is used as the representative rate.
-// - The bounced EMI's `type`/`amount`/`frequency` are not given a formal
-//   loan type or exact amount by the persona (it's one of the informal
-//   app loans) - Personal is used as a stand-in type and ₹3,000 as a
-//   plausible installment amount. Neither affects the bounce-override
-//   logic, which only reads `recency` (set to WithinOneMonth, matching
-//   "bounced last month") and frequency "1" (matching "one EMI bounced").
+// - The bounced EMI's `frequency` ("1", matching "one EMI bounced") and
+//   `recency` (WithinOneMonth, matching "bounced last month") both feed
+//   the graded bounce ladder now, alongside how many different loans were
+//   affected (loansAffected = 1 here, since only one bounce row exists).
+//   None of that changes HER result, though: the bounce+high-cost-debt
+//   override (step 4) fires first and short-circuits before the ladder
+//   (step 4a) is ever reached - the ladder only matters when the override
+//   doesn't fire (see field-coverage.test.ts and scenarios.test.ts's
+//   standalone-bounce probes for cases where it does).
 // - `tenurePreferred`: not stated for the scooter loan; 24 months is used
 //   as a typical two-wheeler loan tenure.
 // - Husband's 8-month unemployment and the two children are not

@@ -40,6 +40,15 @@ in the math traces back to a row in this table.
 | Needed-EMI rate strategy | low end of the rate band | Uses the optimistic/low end of the assumed rate band to compute the EMI needed for the requested amount, rather than the midpoint or the conservative high end. | my judgement |
 | Self-employed new-business confidence threshold | 2 years in business | Confidence-only modifier — does not affect core affordability math. A newer business carries more income-continuity uncertainty over the loan's tenure. | my judgement |
 | Collateral LTV (loan-to-value) | 60% | Typical LAP lending ceiling as a share of usable (unencumbered) property value. | my judgement, informed by typical LAP industry practice (50%–70% LTV range observed) |
+| monthsRemaining weighting — enabled | true | An existing EMI ending partway through the new loan's tenure doesn't tie up the same average FOIR headroom as one running the full length; weighting it by overlap gives a more accurate LENDER-facing FOIR check. Applies to the lender ceiling only, never the borrower-safe ceiling or freeMoney — see §2. | my judgement |
+| Bounce ladder — single recent bounce, rate band widen | +2 percentage points at the top | One recent, isolated bounce on one loan is weaker than the bounce+high-cost-debt override, but a lender's bureau check would still price it in — widen the top of the quoted band rather than leave it unpenalized. | my judgement |
+| Bounce ladder — severe tier, minimum total bounces | 2 | Two or more bounces (summed across all rows) crosses from "single" into the "severe" ladder tier, alongside the loans-affected threshold below. | my judgement |
+| Bounce ladder — severe tier, minimum loans affected | 2 | Bounces on two or more different loans also crosses into the "severe" tier, independent of total bounce count — spread-across-loans is a distinct red flag from repeat count alone. | my judgement |
+| Bounce ladder — severe tier, rate band widen | +5 percentage points at the top | Base widen for the severe tier — repeated or spread bounces are worse than a single isolated one, so the band widens further than the single-bounce case. | my judgement |
+| Bounce ladder — severe tier, safe-amount haircut | 15% | Beyond widening the quoted rate, the severe tier also haircuts the safe EMI ceiling itself — a lender pulling the bureau report would treat this pattern as materially elevated risk, not just a pricing adjustment. | my judgement |
+| Bounce ladder — extra widen per loan affected beyond the first | +2 percentage points at the top | Within the severe tier, bounces spread across several loans are worse than the same count repeated on one loan (signals money ran out across the board, not one dispute with one lender) — each additional loan affected adds this on top of the tier's base widen. | my judgement |
+| Bounce ladder — extra haircut per loan affected beyond the first | +5% | Same reasoning as the rate-widen row above, applied to the safe-amount haircut instead. | my judgement |
+| High-cost-debt repayment — assumed tenure | 12 months | Informal/app-based high-cost loans typically amortize over a short tenure rather than running indefinitely; estimating a real repaying EMI (via the same reducing-balance formula used elsewhere) over an assumed 12-month tenure reflects the true monthly burden far better than an interest-only estimate, which meaningfully understates it. | my judgement, typical short-term/app-loan tenure |
 
 ## 2. Logic and branching rules
 
@@ -63,6 +72,39 @@ does the question become "does the requested amount fit," which is the
 means a borrower who genuinely cannot safely carry any new EMI is told so
 directly, instead of being shown a downsized amount that's still unsafe.
 
+### The "don't borrow" path is never a dead end
+
+Three early-return branches can produce a "Don't borrow" verdict before the
+normal calculation ever runs: no free cash before any EMI is even
+considered, no valid tenure left before the assumed retirement age, and the
+bounce+high-cost-debt override above. (The two ceiling-based branches in the
+priority order (1) and (2) above are different — they fall through to the
+normal end-to-end calculation rather than returning early, so they already
+computed a real O3 rate band even before this fix.) All three early-return
+branches used to zero out O3 (`rateBandLow`/`rateBandHigh` both 0%) as a
+null-handling shortcut. That reads as a bug, not a design choice — 0%–0% is
+never a real rate a borrower could be quoted, and it broke the negotiation
+card's own quote-comparison widget (any real lender quote looked "above" a
+fake 0% ceiling).
+
+Every early-return "Don't borrow" result now instead carries:
+
+- **A real, indicative O3 rate band and APR** for the borrower's loan type
+  and credit profile — computed the same way as a normal result, just
+  ignoring collateral routing (no loan is actually being sized) — clearly
+  labelled in `rateReason` as "not a recommendation," since it's shown for
+  reference only.
+- **A populated `actionableNextStep`** naming the specific blocker in
+  concrete terms and what would need to change to clear it (e.g., for the
+  bounce+high-cost-debt override, the actual monthly cost of the high-cost
+  debt and how many clean months would age the bounce out of the recent
+  window). Generated in the engine per the reason-string-per-number pattern
+  — never hardcoded in the UI component.
+
+O2 and O4 are still correctly zero on these paths (no loan is being sized,
+so there is no lender-approved amount or EMI ceiling to report) — only O3's
+null-as-zero was the bug.
+
 ### The bounce + high-cost-debt override rule
 
 A single isolated EMI bounce does **not**, by itself, trigger "Don't borrow."
@@ -74,14 +116,53 @@ look on paper.
 
 **Why:** a single bounce could be a one-off (a missed transfer, a bank error)
 and is weak evidence on its own. High-cost debt alone is already priced into
-the affordability math via its estimated servicing cost, computed from the
-borrower's own reported interest rate (which can legitimately be 0, e.g. an
-interest-free advance from family or an employer — this is not treated as a
-missing/invalid answer). But the two
-together — a recent bounce *and* an existing high-cost loan — is a real
-behavioral pattern indicating financial strain that the math's "should be
-fine" doesn't capture. This is a deliberate, load-bearing design decision,
-not an incidental check.
+the affordability math via an estimated real repaying EMI — amortized over an
+assumed 12-month tenure (§1) at the borrower's own reported interest rate
+(which can legitimately be 0, e.g. an interest-free advance from family or an
+employer — this is not treated as a missing/invalid answer), not an
+interest-only figure, which would meaningfully understate the true monthly
+burden. But the two together — a recent bounce *and* an existing high-cost
+loan — is a real behavioral pattern indicating financial strain that the
+math's "should be fine" doesn't capture. This is a deliberate, load-bearing
+design decision, not an incidental check.
+
+**The override is a hard stop, not a dead end** — see "The 'don't borrow'
+path is never a dead end" above for what it still surfaces (a real
+indicative O3 band and an `actionableNextStep`) instead of zeroing
+everything.
+
+### Graded bounce ladder (below the override)
+
+When the bounce+high-cost-debt override above does **not** fire, a recent
+bounce still isn't ignored — three signals collected from the "Existing EMIs"
+bounce rows (per-row frequency, per-row recency, and how many different loans
+were affected) are aggregated into one of three tiers:
+
+1. **None** — no bounce, or the worst bounce across all rows is older than
+   the recent window (3 months, §1). No effect on anything.
+2. **Single** — exactly one recent bounce on one loan (`totalBounces` = 1,
+   `loansAffected` = 1). Downgrades confidence one level and widens the top
+   of the quoted rate band by 2 points (§1).
+3. **Severe** — `totalBounces` ≥ 2 **or** `loansAffected` ≥ 2 (either
+   condition alone qualifies). Downgrades confidence one level (same as
+   Single — severity does not stack additional confidence downgrades),
+   widens the rate band's top by 5 points, and applies a 15% haircut
+   directly to the safe EMI ceiling — not just a pricing adjustment, since a
+   pattern this consistent is treated as materially elevated risk to the
+   borrower's own safety math, not only to what a lender would quote.
+
+**Bounces spread across several loans are worse than the same count repeated
+on one loan.** Within the Severe tier, each loan affected beyond the first
+adds an *extra* widen (+2 points) and *extra* haircut (+5%) on top of the
+tier's base values (§1). Two bounces on one loan and two bounces spread
+across two different loans both cross into Severe, but the spread case is
+priced worse once there — repeated bounces on one loan could still be one
+lender's dispute; a pattern across several loans signals money ran out
+across the board.
+
+Every bounce effect surfaces in `o3.confidenceReason` and/or `o3.rateReason`
+(and `o2.safeToCarryReason` when the Severe haircut applies) — never a silent
+penalty the borrower can't see.
 
 ### Two-number O2 structure
 
@@ -96,6 +177,37 @@ number is larger.
 different things. A lender approving a bigger loan than a borrower can
 comfortably repay is exactly the scenario this app exists to flag, not paper
 over by reporting only one blended number.
+
+### monthsRemaining weighting — a lender/borrower asymmetry, on purpose
+
+Each existing EMI now carries a `monthsRemaining` field. It is woven into the
+FOIR headroom calculation with a deliberate asymmetry between the two O2
+numbers:
+
+- **`lenderLikely` uses a WEIGHTED obligation total.** Each existing EMI is
+  weighted by `min(monthsRemaining, newLoanTenureMonths) / newLoanTenureMonths`
+  before being summed — an EMI ending well before the new loan's tenure is
+  over doesn't tie up the same *average* FOIR headroom as one running the
+  full length, and a lender's FOIR assessment is exactly this kind of
+  averaged, tenure-relative read.
+- **`safeToCarry` (and `freeMoney`, and the O4 stress case) use the FULL,
+  UNWEIGHTED obligation total.** The borrower pays the entire EMI, in full,
+  every single month until it actually ends — averaging it down would make
+  the number this app calls "safe" *less* safe than reality, which is
+  precisely backwards for a tool whose purpose is the borrower's real
+  safety margin, not a lender's approval odds.
+
+**Why the two ceilings are allowed to diverge because of this:** before this
+weighting existed, `lenderLikely` and `safeToCarry` would coincidentally
+match whenever the FOIR cap was the binding constraint on both sides (see
+`ceilingsMatchNote`). Now that the two sides use genuinely different
+obligation totals, a match is more likely to be a real coincidence for that
+borrower's numbers than the "same ceiling driving both" explanation that
+used to always apply — `ceilingsMatchNote`'s wording reflects whichever is
+actually true rather than always claiming "not a coincidence."
+
+Toggleable via `monthsRemainingWeighting.enabled` in rules.json (§1) — when
+disabled, both sides fall back to the same unweighted total.
 
 ### Income-type branching (self-employed / informal)
 
@@ -245,6 +357,14 @@ loan they want right now.
   to de-duplicate a free-text EMI entry against the collateral answer in
   the engine itself, so a borrower who ignores the warning will still be
   double-counted.
+- **monthsRemaining weighting only applies to existing EMIs, not high-cost
+  debt or an already-pledged collateral loan.** No remaining-tenure is
+  collected for either of those two obligation sources, so they're carried
+  into the lender-facing weighted total at full, unweighted value — treated
+  as if they ran the new loan's entire tenure, even if they'll actually
+  finish sooner. This understates the lender ceiling by a small margin in
+  that case, rather than overstating it, so it errs on the conservative
+  side, but it is not modeled precisely.
 - **Co-applicant income is not modeled at all.** A borrower applying jointly
   (e.g., with a spouse) receives individual-only numbers, which may
   understate their real eligibility.
