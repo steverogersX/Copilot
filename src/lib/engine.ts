@@ -203,9 +203,6 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     existingObligations += (highCostDebtAmount * (highCostDebtRate / 100)) / 12;
   }
 
-  // Collateral - parsed here since the already-pledged case adds a real
-  // existing obligation below; the lender-side routing decision (§8b) is
-  // made further down, once the income-based lender ceiling is known.
   const hasCollateral = formData.hasCollateral === "yes";
   const collateralValue = hasCollateral ? Number(formData.collateralValue) : 0;
   const collateralAlreadyPledged =
