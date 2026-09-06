@@ -146,9 +146,13 @@ const baseLoanFormSchema = z.object({
 });
 
 export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
-  // TODO: Informal income type needs its own superRefine block +
-  // numberOfIncomeSources field before engine() can support it.
-  if (data.incomeType === IncomeType.SelfEmployed) {
+  // Self-employed and informal income both vary month to month, so both use
+  // the same low/high range + duration-of-work fields instead of a single
+  // net monthly income figure.
+  if (
+    data.incomeType === IncomeType.SelfEmployed ||
+    data.incomeType === IncomeType.Informal
+  ) {
     if (!data.incomeStabilityLow || Number(data.incomeStabilityLow) <= 0) {
       ctx.addIssue({
         code: "custom",
@@ -166,7 +170,7 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
     if (!data.yearsInBusiness || Number(data.yearsInBusiness) <= 0) {
       ctx.addIssue({
         code: "custom",
-        message: "Enter years in business",
+        message: "Enter how long you've been earning this way",
         path: ["yearsInBusiness"],
       });
     }
@@ -174,8 +178,8 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
     !data.netMonthlyIncome ||
     Number(data.netMonthlyIncome) <= 0
   ) {
-    // Self-employed borrowers give income via the low/high fields above
-    // instead - this field doesn't apply to them.
+    // Self-employed/informal borrowers give income via the low/high fields
+    // above instead - this field doesn't apply to them.
     ctx.addIssue({
       code: "custom",
       message: "Enter your net monthly income",

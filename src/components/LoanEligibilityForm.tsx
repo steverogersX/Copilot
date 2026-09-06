@@ -294,6 +294,114 @@ export default function LoanEligibilityForm() {
     </div>
   );
 
+  const renderInformalFields = () => (
+    <div className={insetPanel}>
+      <div>
+        <p className="text-sm font-medium">Income details</p>
+        <p className={hintClass}>
+          Your income can vary week to week — give us the range so we can
+          assess it fairly.
+        </p>
+      </div>
+
+      <div className={fieldWrapper}>
+        <Label>
+          Income stability (monthly)
+          <Required />
+        </Label>
+        <div className={gridTwo}>
+          <form.Field name="incomeStabilityLow">
+            {(subField) => (
+              <div className={fieldWrapper}>
+                <Label htmlFor={subField.name}>Low income month</Label>
+                <Input
+                  id={subField.name}
+                  name={subField.name}
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  placeholder="e.g. 10000"
+                  value={subField.state.value}
+                  onBlur={subField.handleBlur}
+                  onKeyDown={blockNonDigitKeys}
+                  onChange={(e) =>
+                    subField.handleChange(onlyDigits(e.target.value))
+                  }
+                />
+                {subField.state.meta.errors.length > 0 && (
+                  <p className={errorClass}>
+                    {subField.state.meta.errors.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+          </form.Field>
+
+          <form.Field name="incomeStabilityHigh">
+            {(subField) => (
+              <div className={fieldWrapper}>
+                <Label htmlFor={subField.name}>High income month</Label>
+                <Input
+                  id={subField.name}
+                  name={subField.name}
+                  type="number"
+                  min={1}
+                  inputMode="numeric"
+                  placeholder="e.g. 30000"
+                  value={subField.state.value}
+                  onBlur={subField.handleBlur}
+                  onKeyDown={blockNonDigitKeys}
+                  onChange={(e) =>
+                    subField.handleChange(onlyDigits(e.target.value))
+                  }
+                />
+                {subField.state.meta.errors.length > 0 && (
+                  <p className={errorClass}>
+                    {subField.state.meta.errors.join(", ")}
+                  </p>
+                )}
+              </div>
+            )}
+          </form.Field>
+        </div>
+      </div>
+
+      <form.Field name="yearsInBusiness">
+        {(subField) => (
+          <div className={`${fieldWrapper} sm:max-w-[50%]`}>
+            <Label htmlFor={subField.name}>
+              How long have you been doing this work?
+              <Required />
+            </Label>
+            <Input
+              id={subField.name}
+              name={subField.name}
+              type="number"
+              min={0}
+              inputMode="numeric"
+              placeholder="e.g. 2"
+              value={subField.state.value}
+              onBlur={subField.handleBlur}
+              onKeyDown={blockNonDigitKeys}
+              onChange={(e) =>
+                subField.handleChange(onlyDigits(e.target.value))
+              }
+            />
+            <p className={hintClass}>
+              In years. If you do more than one kind of informal work, use
+              the longest.
+            </p>
+            {subField.state.meta.errors.length > 0 && (
+              <p className={errorClass}>
+                {subField.state.meta.errors.join(", ")}
+              </p>
+            )}
+          </div>
+        )}
+      </form.Field>
+    </div>
+  );
+
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
       <div className="flex flex-col gap-1">
@@ -478,13 +586,16 @@ export default function LoanEligibilityForm() {
                   {/* Follow-up: only shown for self-employed / business-owner income */}
                   {field.state.value === IncomeType.SelfEmployed &&
                     renderSelfEmployedFields()}
+                  {field.state.value === IncomeType.Informal &&
+                    renderInformalFields()}
                 </div>
               )}
             </form.Field>
 
             <form.Subscribe selector={(state) => state.values.incomeType}>
               {(incomeType) =>
-                incomeType !== IncomeType.SelfEmployed && (
+                incomeType !== IncomeType.SelfEmployed &&
+                incomeType !== IncomeType.Informal && (
                   <form.Field name="netMonthlyIncome">
                     {(field) => (
                       <div className={`${fieldWrapper} sm:max-w-[50%]`}>
@@ -876,9 +987,14 @@ export default function LoanEligibilityForm() {
               {(field) => (
                 <div className={`${fieldWrapper} sm:max-w-[50%]`}>
                   <Label htmlFor={field.name}>
-                    Household/monthly expenses
+                    Your monthly expenses
                     <Required />
                   </Label>
+                  <p className={hintClass}>
+                    Your own share of household costs — if others contribute
+                    income toward rent, food, or bills, count only the part
+                    you personally cover.
+                  </p>
                   <Input
                     id={field.name}
                     name={field.name}

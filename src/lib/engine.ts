@@ -141,7 +141,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   let tenureMonths = Number(formData.tenurePreferred);
   let tenureAdjustmentNote: string | null = null;
 
-  const retirementAge = isSelfEmployed
+  const retirementAge = usesIncomeStabilityRange
     ? rules.retirementAge.selfEmployed
     : rules.retirementAge.salaried;
 
@@ -253,7 +253,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         o1: {
           verdict: Verdict.DontBorrow,
           reason: `At age ${age}, you're already at or past the assumed retirement age of ${retirementAge} lenders use for ${
-            isSelfEmployed ? "self-employed" : "salaried"
+            usesIncomeStabilityRange ? "self-employed/informal" : "salaried"
           } borrowers - there's no valid tenure left to offer a loan against.`,
         },
         o2: {
@@ -338,11 +338,12 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
 
   const neededEmi = calculateEmi(amountWanted, assumedRate, tenureMonths);
 
-  // 6b. Self-employed new-business confidence modifier - yearsInBusiness
-  // never touches freeMoney/foirMaxNewEmi/borrowerSafeEmiCeiling or any
-  // EMI/amount figure, only the reported confidence label.
+  // 6b. New-business/new-to-this-work confidence modifier (self-employed and
+  // informal alike) - yearsInBusiness never touches
+  // freeMoney/foirMaxNewEmi/borrowerSafeEmiCeiling or any EMI/amount figure,
+  // only the reported confidence label.
   const isNewBusiness =
-    isSelfEmployed &&
+    usesIncomeStabilityRange &&
     Number(formData.yearsInBusiness) <
       rules.selfEmployedConfidence.newBusinessThresholdYears;
   let reportedConfidence = isNewBusiness
