@@ -380,20 +380,39 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   const borrowerSafeEmiCeiling = Math.min(freeMoney, foirMaxNewEmi);
   const recommendedEmiCeiling = borrowerSafeEmiCeiling;
 
-  // 6. Calculate the EMI needed for the requested amount, using whichever
+  // 6. Collateral-based lender path - routes to a secured product (LAP)
+  // only when usable (unencumbered) collateral alone can cover the
+  // requested amount; partially-used collateral that falls short doesn't
+  // trigger a secured recommendation just because *some* collateral exists.
+  // Resolved BEFORE any rate-dependent math below, so that every figure
+  // that follows - neededEmi, both O2 amounts, and O4's tenure table - is
+  // priced consistently with whichever rate band the borrower actually
+  // gets routed to, matching what O3 displays as their "fair rate".
+  const collateralBasedLenderAmount =
+    usableCollateralValue * (rules.collateral.ltvPercent / 100);
+  const routedToSecuredProduct =
+    hasCollateral && collateralBasedLenderAmount >= amountWanted;
+
+  // 7. Calculate the EMI needed for the requested amount, using whichever
   // point on the rate band rules.neededEmiRateStrategy.strategy selects.
+  // A borrower routed to a secured product gets LAP pricing regardless of
+  // which loan type they originally applied under - the loan-type table
+  // only prices the unsecured line of the application.
   const creditScore = formData.creditScore ? Number(formData.creditScore) : null;
   const rateBand = getRateBand(creditScore, formData.loanType as LoanType);
+  const effectiveRateBand = routedToSecuredProduct
+    ? lookupRateBand(rules.lapRateBands, creditScore)
+    : rateBand;
   const assumedRate =
     rules.neededEmiRateStrategy.strategy === "midpoint"
-      ? (rateBand.low + rateBand.high) / 2
+      ? (effectiveRateBand.low + effectiveRateBand.high) / 2
       : rules.neededEmiRateStrategy.strategy === "high"
-        ? rateBand.high
-        : rateBand.low;
+        ? effectiveRateBand.high
+        : effectiveRateBand.low;
 
   const neededEmi = calculateEmi(amountWanted, assumedRate, tenureMonths);
 
-  // 6b. New-business/new-to-this-work confidence modifier (self-employed and
+  // 7b. New-business/new-to-this-work confidence modifier (self-employed and
   // informal alike) - yearsInBusiness never touches
   // freeMoney/foirMaxNewEmi/borrowerSafeEmiCeiling or any EMI/amount figure,
   // only the reported confidence label.
@@ -401,11 +420,11 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     usesIncomeStabilityRange &&
     Number(formData.yearsInBusiness) <
       rules.selfEmployedConfidence.newBusinessThresholdYears;
-  let reportedConfidence = isNewBusiness
-    ? downgradeConfidence(rateBand.confidence)
-    : rateBand.confidence;
+  const reportedConfidence = isNewBusiness
+    ? downgradeConfidence(effectiveRateBand.confidence)
+    : effectiveRateBand.confidence;
 
-  // 7. Verdict
+  // 8. Verdict
   let verdict: Verdict;
   let reason: string;
 
@@ -440,32 +459,14 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     tenureMonths
   );
 
-  // 8b. Collateral-based lender path - routes to a secured product (LAP)
-  // only when usable (unencumbered) collateral alone can cover the
-  // requested amount; partially-used collateral that falls short doesn't
-  // trigger a secured recommendation just because *some* collateral exists.
-  // This only ever raises the LENDER-facing ceiling/rate - safeToCarryAmount
-  // above is already finalized and stays purely income-driven (§1).
-  const collateralBasedLenderAmount =
-    usableCollateralValue * (rules.collateral.ltvPercent / 100);
-  const routedToSecuredProduct =
-    hasCollateral && collateralBasedLenderAmount >= amountWanted;
-
-  // A borrower routed to a secured product gets LAP pricing regardless of
-  // which loan type they originally applied under.
-  const effectiveRateBand = routedToSecuredProduct
-    ? lookupRateBand(rules.lapRateBands, creditScore)
-    : rateBand;
-
+  // 8b. This only ever raises the LENDER-facing ceiling - safeToCarryAmount
+  // above is already finalized and stays purely income-driven (§1). (The
+  // routing decision itself, and the rate band it implies, were resolved
+  // back at step 6, before assumedRate/neededEmi/these two amounts were
+  // computed, so everything here is already priced consistently.)
   const finalLenderLikelyAmount = routedToSecuredProduct
     ? Math.max(lenderLikelyAmount, collateralBasedLenderAmount)
     : lenderLikelyAmount;
-
-  if (routedToSecuredProduct) {
-    reportedConfidence = isNewBusiness
-      ? downgradeConfidence(effectiveRateBand.confidence)
-      : effectiveRateBand.confidence;
-  }
 
   const securedProductNote = routedToSecuredProduct
     ? `Because you have unencumbered collateral worth ~₹${Math.round(

@@ -113,11 +113,11 @@ tenure), since he answered "no" to it already being pledged.
 ### Outputs
 
 **O1 — Borrow less**
-> Your requested amount needs an EMI of ~₹34902, above your safe ceiling of ~₹15000. Consider a smaller amount or a longer tenure.
+> Your requested amount needs an EMI of ~₹31138, above your safe ceiling of ~₹15000. Consider a smaller amount or a longer tenure.
 
 **O2 — Maximum amount**
-- Lender likely to offer: **₹27,00,000** — Based on your unencumbered collateral (~₹4500000) at a typical 60% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹1289310) would support on its own.
-- Safe to carry: **₹6,44,655** — Based on your lowest-earning month (~₹40000), minus your monthly expenses (₹25000) and existing obligations (~₹0) — using your worst month, not your average, keeps this figure safe.
+- Lender likely to offer: **₹27,00,000** — Based on your unencumbered collateral (~₹4500000) at a typical 60% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹1445201) would support on its own.
+- Safe to carry: **₹7,22,601** — Based on your lowest-earning month (~₹40000), minus your monthly expenses (₹25000) and existing obligations (~₹0) — using your worst month, not your average, keeps this figure safe.
 - Routed to a secured product: **Yes.** Because you have unencumbered collateral worth ~₹4500000 available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.
 
 **O3 — Fair rate**
@@ -132,9 +132,9 @@ tenure), since he answered "no" to it already being pledged.
 
   | Tenure | EMI/month |
   |---|---|
-  | 60 months | ₹34,902 |
-  | 72 months | ₹30,909 |
-  | 48 months | ₹40,990 |
+  | 60 months | ₹31,138 |
+  | 72 months | ₹27,038 |
+  | 48 months | ₹37,328 |
 
 - Stress case: If your income dropped by 20%, your safe EMI ceiling would fall to ~₹7000 - plan for this before committing to the top of your range.
 

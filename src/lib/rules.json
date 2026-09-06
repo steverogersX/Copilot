@@ -7,7 +7,7 @@
   "retirementAge": {
     "salaried": 60,
     "selfEmployed": 65,
-    "why": "Approximate lender-cap convention for loan-end age by income type. Only 'salaried' is wired into the engine so far.",
+    "why": "Approximate lender-cap convention for loan-end age by income type. Salaried borrowers use 'salaried'; self-employed and informal borrowers (both assessed via the income-stability range) use 'selfEmployed'.",
     "source": "our judgement, typical lender practice"
   },
   "personalLoanRateBands": {

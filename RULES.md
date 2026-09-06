@@ -145,20 +145,30 @@ partial or mostly-used-up collateral does not trigger the secured
 recommendation just because *some* collateral exists.
 
 When routed:
-- The **lender-facing** rate band switches to the LAP rate band (9%–17%,
-  tiered by credit score — see §1), regardless of which loan type the
-  borrower originally applied under, and `lenderLikely` becomes the larger of
-  the income-based FOIR ceiling and the collateral-based ceiling.
-- **`safeToCarry` is completely unaffected.** It is computed purely from
-  income/expenses/existing obligations, before the collateral routing
-  decision is even made, and nothing about collateral or the secured rate
-  band ever feeds back into it.
+- The rate band used for **every downstream calculation** — not just
+  display — switches to the LAP rate band (9%–17%, tiered by credit score —
+  see §1), regardless of which loan type the borrower originally applied
+  under. This routing decision is resolved first, before the rate-dependent
+  math that follows it (the EMI needed for the requested amount, both O2
+  amounts, and O4's tenure table), so every number the borrower sees is
+  priced off the same rate O3 shows them as "fair for you" — never a mix of
+  the original unsecured rate and the LAP rate.
+  `lenderLikely` becomes the larger of the income-based FOIR ceiling
+  (itself now computed at the LAP rate) and the collateral-based ceiling.
+- **`safeToCarry`'s EMI ceiling is completely unaffected by collateral** —
+  it is still capped purely by income/expenses/existing obligations, and
+  collateral never raises it the way it can raise `lenderLikely`. What
+  *does* change when routed is the rate used to convert that EMI ceiling
+  into a principal amount: it uses the LAP rate the borrower will actually
+  be quoted, not the original unsecured rate, so the reported rupee figure
+  reflects what they can truly afford at their real cost of borrowing.
 
 This is the mechanism by which a borrower like Ravi — who has real
 unencumbered collateral — gets routed toward a secured product instead of an
 unsecured business loan: a lower rate and a higher lender-approved amount,
 surfaced explicitly via `securedProductNote`, while his personal safe-to-carry
-number stays governed by his actual income.
+*ceiling* stays governed by his actual income, priced at the rate he'll
+actually pay.
 
 If an already-pledged loan exists against the collateral, its estimated EMI
 (computed from the borrower-reported outstanding amount, interest rate, and
