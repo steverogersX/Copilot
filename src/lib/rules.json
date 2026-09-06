@@ -28,11 +28,6 @@
     "why": "Market-observed range is 0.5-5%; using a mid-range band, not the extremes.",
     "source": "Paisabazaar, DMI Finance, BankBazaar (mid-2026)"
   },
-  "highCostDebt": {
-    "assumedAnnualRate": 0.30,
-    "why": "Used to estimate a monthly interest-only servicing cost for high-cost debt where no EMI is stated, so it still affects the affordability math, not just the override flag.",
-    "source": "our judgement, informed by observed app-loan/informal-lender rates"
-  },
   "bounceOverride": {
     "recentWindowMonths": 3,
     "why": "A single old/isolated bounce should not auto-reject; only a RECENT bounce combined with high-cost debt should override the math.",
@@ -52,5 +47,17 @@
     "newBusinessThresholdYears": 2,
     "why": "Confidence-only modifier, does not affect core affordability math - a newer business carries more income-continuity uncertainty over the loan's tenure.",
     "source": "our judgement"
+  },
+  "collateral": {
+    "ltvPercent": 60,
+    "why": "Typical LAP lending ceiling as a share of usable (unencumbered) property value.",
+    "source": "our judgement, informed by typical LAP industry practice (50-70% LTV range observed)"
+  },
+  "securedRate": {
+    "lowPercent": 9,
+    "highPercent": 12,
+    "confidence": "medium",
+    "why": "Secured loans (LAP) carry lower rates than unsecured personal/business loans since lender risk is covered by the pledged asset. Not yet verified against live market data the way the unsecured personal-loan band was - documented estimate pending verification.",
+    "source": "our judgement; needs web-verification pass before final submission"
   }
 }

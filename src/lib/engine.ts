@@ -36,6 +36,8 @@ export type EligibilityResult = {
   o2: {
     lenderLikely: number;
     safeToCarry: number;
+    routedToSecuredProduct: boolean;
+    securedProductNote: string | null;
   };
   o3: {
     rateBandLow: number;
@@ -129,20 +131,10 @@ function calculateApr(
 }
 
 export function engine(formData: LoanFormValues): EligibilityResult | null {
-  // Scoped for now: the only unsupported combination is a business loan for
-  // an informal-income borrower (informal income has no superRefine/math
-  // support yet - see the TODO on loanFormSchema).
-  if (
-    formData.loanType === LoanType.Business &&
-    formData.incomeType === IncomeType.Informal
-  ) {
-    console.log(
-      "engine: unsupported combination for now (business loan + informal income)"
-    );
-    return null;
-  }
 
   const isSelfEmployed = formData.incomeType === IncomeType.SelfEmployed;
+  const isInformal = formData.incomeType === IncomeType.Informal;
+  const usesIncomeStabilityRange = isSelfEmployed || isInformal;
 
   const age = Number(formData.age);
   const amountWanted = Number(formData.amountWanted);
@@ -153,22 +145,16 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     ? rules.retirementAge.selfEmployed
     : rules.retirementAge.salaried;
 
-  // For self-employed, the LOW month figure drives the borrower-side safety
-  // math (freeMoney, the stress case) - an EMI is owed every month regardless
-  // of that month's actual earnings, so the worst realistic month is the
-  // safe anchor.
-  const monthlyIncomeForMath = isSelfEmployed
-    ? Number(formData.incomeStabilityLow)
+  const incomeStabilityLow = Number(formData.incomeStabilityLow);
+  const incomeStabilityHigh = Number(formData.incomeStabilityHigh);
+  const incomeStabilityAvg = (incomeStabilityLow + incomeStabilityHigh) / 2;
+
+  const monthlyIncomeForMath = usesIncomeStabilityRange
+    ? incomeStabilityLow
     : Number(formData.netMonthlyIncome);
 
-  // The lender-facing FOIR check uses a less conservative figure, since real
-  // lenders assess bank-statement pattern/average income, not a borrower's
-  // worst month (§4 market research). incomeStabilityHigh is intentionally
-  // NOT used anywhere in the math - a borrower's best month overstates what
-  // a lender would realistically extend credit against; it stays display-only
-  // (e.g. "your best month was ₹X") for the borrower's own context.
-  const lenderFacingIncome = isSelfEmployed
-    ? Number(formData.incomeStabilityAvg)
+  const lenderFacingIncome = usesIncomeStabilityRange
+    ? incomeStabilityAvg
     : Number(formData.netMonthlyIncome);
 
   // 1. Deduct household expenses from take-home income.
@@ -183,13 +169,48 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   }
 
   // High-cost debt has no stated EMI, only an outstanding amount, so estimate
-  // its monthly service cost at the documented high-cost rate (~30% p.a., §3)
+  // its monthly service cost from the borrower-reported rate (which can
+  // legitimately be 0 - e.g. an interest-free advance from family/employer)
   // and count it too - otherwise the amount field is collected but never
   // affects the affordability math, only the boolean override check below.
   if (formData.hasHighCostDebt === "yes") {
     const highCostDebtAmount = Number(formData.highCostDebtAmount);
-    existingObligations +=
-      (highCostDebtAmount * rules.highCostDebt.assumedAnnualRate) / 12;
+    const highCostDebtRate = Number(formData.highCostDebtInterestRate);
+    existingObligations += (highCostDebtAmount * (highCostDebtRate / 100)) / 12;
+  }
+
+  // Collateral - parsed here since the already-pledged case adds a real
+  // existing obligation below; the lender-side routing decision (§8b) is
+  // made further down, once the income-based lender ceiling is known.
+  const hasCollateral = formData.hasCollateral === "yes";
+  const collateralValue = hasCollateral ? Number(formData.collateralValue) : 0;
+  const collateralAlreadyPledged =
+    formData.collateralAlreadyPledged === "yes";
+  const collateralOutstanding = collateralAlreadyPledged
+    ? Number(formData.collateralOutstandingAmount)
+    : 0;
+  const usableCollateralValue = Math.max(
+    0,
+    collateralValue - collateralOutstanding
+  );
+
+  // KNOWN LIMITATION: if the borrower already listed this same loan under
+  // "existing EMIs" above, it gets counted twice here - there's no reliable
+  // way to de-duplicate a free-text EMI entry against this collateral answer
+  // in the engine. This needs a UI-side fix (warn the user not to list the
+  // pledged-asset loan again once they've said it's already pledged), not an
+  // engine-side one.
+  if (collateralAlreadyPledged && collateralOutstanding > 0) {
+    const collateralLoanRate = Number(formData.collateralInterestRate);
+    const collateralRemainingTenureMonths = Number(
+      formData.collateralRemainingTenureMonths
+    );
+    const estimatedCollateralLoanEmi = calculateEmi(
+      collateralOutstanding,
+      collateralLoanRate,
+      collateralRemainingTenureMonths
+    );
+    existingObligations += estimatedCollateralLoanEmi;
   }
 
   freeMoney -= existingObligations;
@@ -202,7 +223,12 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         reason:
           "Existing expenses and EMIs already use up all your take-home income - there's no free cash to safely add a new EMI.",
       },
-      o2: { lenderLikely: 0, safeToCarry: 0 },
+      o2: {
+        lenderLikely: 0,
+        safeToCarry: 0,
+        routedToSecuredProduct: false,
+        securedProductNote: null,
+      },
       o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
       o4: {
         emiCeiling: 0,
@@ -230,7 +256,12 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
             isSelfEmployed ? "self-employed" : "salaried"
           } borrowers - there's no valid tenure left to offer a loan against.`,
         },
-        o2: { lenderLikely: 0, safeToCarry: 0 },
+        o2: {
+        lenderLikely: 0,
+        safeToCarry: 0,
+        routedToSecuredProduct: false,
+        securedProductNote: null,
+      },
         o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
         o4: {
           emiCeiling: 0,
@@ -266,7 +297,12 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         reason:
           "You have a recently bounced EMI together with existing high-cost debt - this combination is real-world evidence of financial strain that overrides the affordability math, regardless of how comfortable the numbers look on paper.",
       },
-      o2: { lenderLikely: 0, safeToCarry: 0 },
+      o2: {
+        lenderLikely: 0,
+        safeToCarry: 0,
+        routedToSecuredProduct: false,
+        securedProductNote: null,
+      },
       o3: { rateBandLow: 0, rateBandHigh: 0, aprBandLow: 0, aprBandHigh: 0, confidence: Confidence.Low },
       o4: {
         emiCeiling: 0,
@@ -309,7 +345,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     isSelfEmployed &&
     Number(formData.yearsInBusiness) <
       rules.selfEmployedConfidence.newBusinessThresholdYears;
-  const reportedConfidence = isNewBusiness
+  let reportedConfidence = isNewBusiness
     ? downgradeConfidence(rateBand.confidence)
     : rateBand.confidence;
 
@@ -348,17 +384,52 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     tenureMonths
   );
 
+  // 8b. Collateral-based lender path - routes to a secured product (LAP)
+  // only when usable (unencumbered) collateral alone can cover the
+  // requested amount; partially-used collateral that falls short doesn't
+  // trigger a secured recommendation just because *some* collateral exists.
+  // This only ever raises the LENDER-facing ceiling/rate - safeToCarryAmount
+  // above is already finalized and stays purely income-driven (§1).
+  const collateralBasedLenderAmount =
+    usableCollateralValue * (rules.collateral.ltvPercent / 100);
+  const routedToSecuredProduct =
+    hasCollateral && collateralBasedLenderAmount >= amountWanted;
+
+  const effectiveRateBand = routedToSecuredProduct
+    ? {
+        low: rules.securedRate.lowPercent,
+        high: rules.securedRate.highPercent,
+        confidence: rules.securedRate.confidence as Confidence,
+      }
+    : rateBand;
+
+  const finalLenderLikelyAmount = routedToSecuredProduct
+    ? Math.max(lenderLikelyAmount, collateralBasedLenderAmount)
+    : lenderLikelyAmount;
+
+  if (routedToSecuredProduct) {
+    reportedConfidence = isNewBusiness
+      ? downgradeConfidence(effectiveRateBand.confidence)
+      : effectiveRateBand.confidence;
+  }
+
+  const securedProductNote = routedToSecuredProduct
+    ? `Because you have unencumbered collateral worth ~₹${Math.round(
+        usableCollateralValue
+      )} available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.`
+    : null;
+
   // 9. O3 all-in APR band - fold the processing fee (+ GST) into the rate
   // band's low and high ends, using the low/high fee assumption respectively.
   const aprBandLow = calculateApr(
     amountWanted,
-    rateBand.low,
+    effectiveRateBand.low,
     tenureMonths,
     rules.processingFee.lowPercent
   );
   const aprBandHigh = calculateApr(
     amountWanted,
-    rateBand.high,
+    effectiveRateBand.high,
     tenureMonths,
     rules.processingFee.highPercent
   );
@@ -383,12 +454,14 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     tenureAdjustmentNote,
     o1: { verdict, reason },
     o2: {
-      lenderLikely: Math.round(lenderLikelyAmount),
+      lenderLikely: Math.round(finalLenderLikelyAmount),
       safeToCarry: Math.round(safeToCarryAmount),
+      routedToSecuredProduct,
+      securedProductNote,
     },
     o3: {
-      rateBandLow: rateBand.low,
-      rateBandHigh: rateBand.high,
+      rateBandLow: effectiveRateBand.low,
+      rateBandHigh: effectiveRateBand.high,
       aprBandLow: Math.round(aprBandLow * 100) / 100,
       aprBandHigh: Math.round(aprBandHigh * 100) / 100,
       confidence: reportedConfidence,

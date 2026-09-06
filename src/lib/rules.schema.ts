@@ -41,11 +41,6 @@ export const rulesSchema = z.object({
     why: z.string(),
     source: z.string(),
   }),
-  highCostDebt: z.object({
-    assumedAnnualRate: z.number().min(0).max(1),
-    why: z.string(),
-    source: z.string(),
-  }),
   bounceOverride: z.object({
     recentWindowMonths: z.number().int().positive(),
     why: z.string(),
@@ -63,6 +58,18 @@ export const rulesSchema = z.object({
   }),
   selfEmployedConfidence: z.object({
     newBusinessThresholdYears: z.number().int().positive(),
+    why: z.string(),
+    source: z.string(),
+  }),
+  collateral: z.object({
+    ltvPercent: z.number().min(0).max(100),
+    why: z.string(),
+    source: z.string(),
+  }),
+  securedRate: z.object({
+    lowPercent: z.number().positive(),
+    highPercent: z.number().positive(),
+    confidence: z.enum(["low", "medium", "high"]),
     why: z.string(),
     source: z.string(),
   }),

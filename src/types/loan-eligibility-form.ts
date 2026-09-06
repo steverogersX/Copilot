@@ -119,7 +119,6 @@ const baseLoanFormSchema = z.object({
   tenurePreferred: positiveNumberString("Enter your preferred tenure"),
   incomeStabilityLow: z.string(),
   incomeStabilityHigh: z.string(),
-  incomeStabilityAvg: z.string(),
   yearsInBusiness: z.string(),
   age: z
     .string()
@@ -128,13 +127,14 @@ const baseLoanFormSchema = z.object({
         value !== "" && Number(value) >= 18 && Number(value) <= 100,
       { message: "Enter a valid age" }
     ),
-  netMonthlyIncome: positiveNumberString("Enter your net monthly income"),
+  netMonthlyIncome: z.string(),
   existingEmis: z.array(existingEmiSchema),
   monthlyExpenses: positiveNumberString("Enter your monthly expenses"),
   hadEmiBounces: yesNoOptional,
   emiBounces: z.array(emiBounceSchema),
   hasHighCostDebt: yesNoOptional,
   highCostDebtAmount: z.string(),
+  highCostDebtInterestRate: z.string(),
   creditScore: z.string(),
   creditScoreUnknown: z.boolean(),
   hasCollateral: yesNoOptional,
@@ -142,6 +142,7 @@ const baseLoanFormSchema = z.object({
   collateralAlreadyPledged: yesNoOptional,
   collateralOutstandingAmount: z.string(),
   collateralInterestRate: z.string(),
+  collateralRemainingTenureMonths: z.string(),
 });
 
 export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
@@ -162,13 +163,6 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
         path: ["incomeStabilityHigh"],
       });
     }
-    if (!data.incomeStabilityAvg || Number(data.incomeStabilityAvg) <= 0) {
-      ctx.addIssue({
-        code: "custom",
-        message: "Enter your average income month",
-        path: ["incomeStabilityAvg"],
-      });
-    }
     if (!data.yearsInBusiness || Number(data.yearsInBusiness) <= 0) {
       ctx.addIssue({
         code: "custom",
@@ -176,17 +170,40 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
         path: ["yearsInBusiness"],
       });
     }
-  }
-
-  if (
-    data.hasHighCostDebt === "yes" &&
-    (!data.highCostDebtAmount || Number(data.highCostDebtAmount) <= 0)
+  } else if (
+    !data.netMonthlyIncome ||
+    Number(data.netMonthlyIncome) <= 0
   ) {
+    // Self-employed borrowers give income via the low/high fields above
+    // instead - this field doesn't apply to them.
     ctx.addIssue({
       code: "custom",
-      message: "Enter the outstanding amount",
-      path: ["highCostDebtAmount"],
+      message: "Enter your net monthly income",
+      path: ["netMonthlyIncome"],
     });
+  }
+
+  if (data.hasHighCostDebt === "yes") {
+    if (!data.highCostDebtAmount || Number(data.highCostDebtAmount) <= 0) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter the outstanding amount",
+        path: ["highCostDebtAmount"],
+      });
+    }
+    // 0 is a valid answer here (e.g. an interest-free advance from family/
+    // employer) - only reject empty, negative, or unrealistically-high values.
+    if (
+      data.highCostDebtInterestRate === "" ||
+      Number(data.highCostDebtInterestRate) < 0 ||
+      Number(data.highCostDebtInterestRate) > 100
+    ) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter an interest rate (0 if interest-free)",
+        path: ["highCostDebtInterestRate"],
+      });
+    }
   }
 
   // Adaptive collateral branch - only ask what applies:
@@ -219,6 +236,16 @@ export const loanFormSchema = baseLoanFormSchema.superRefine((data, ctx) => {
           code: "custom",
           message: "Enter a valid interest rate",
           path: ["collateralInterestRate"],
+        });
+      }
+      if (
+        !data.collateralRemainingTenureMonths ||
+        Number(data.collateralRemainingTenureMonths) <= 0
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Enter the remaining tenure on that loan",
+          path: ["collateralRemainingTenureMonths"],
         });
       }
     }

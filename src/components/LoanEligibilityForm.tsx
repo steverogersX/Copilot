@@ -50,7 +50,6 @@ const defaultValues: LoanFormValues = {
   tenurePreferred: "",
   incomeStabilityLow: "",
   incomeStabilityHigh: "",
-  incomeStabilityAvg: "",
   yearsInBusiness: "",
   age: "",
   netMonthlyIncome: "",
@@ -60,6 +59,7 @@ const defaultValues: LoanFormValues = {
   emiBounces: [],
   hasHighCostDebt: "",
   highCostDebtAmount: "",
+  highCostDebtInterestRate: "",
   creditScore: "",
   creditScoreUnknown: false,
   hasCollateral: "",
@@ -67,6 +67,7 @@ const defaultValues: LoanFormValues = {
   collateralAlreadyPledged: "",
   collateralOutstandingAmount: "",
   collateralInterestRate: "",
+  collateralRemainingTenureMonths: "",
 };
 
 const fieldWrapper = "flex flex-col gap-1.5";
@@ -203,7 +204,7 @@ export default function LoanEligibilityForm() {
           Income stability (monthly)
           <Required />
         </Label>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <form.Field name="incomeStabilityLow">
             {(subField) => (
               <div className={fieldWrapper}>
@@ -258,32 +259,6 @@ export default function LoanEligibilityForm() {
             )}
           </form.Field>
 
-          <form.Field name="incomeStabilityAvg">
-            {(subField) => (
-              <div className={fieldWrapper}>
-                <Label htmlFor={subField.name}>Avg income month</Label>
-                <Input
-                  id={subField.name}
-                  name={subField.name}
-                  type="number"
-                  min={1}
-                  inputMode="numeric"
-                  placeholder="e.g. 35000"
-                  value={subField.state.value}
-                  onBlur={subField.handleBlur}
-                  onKeyDown={blockNonDigitKeys}
-                  onChange={(e) =>
-                    subField.handleChange(onlyDigits(e.target.value))
-                  }
-                />
-                {subField.state.meta.errors.length > 0 && (
-                  <p className={errorClass}>
-                    {subField.state.meta.errors.join(", ")}
-                  </p>
-                )}
-              </div>
-            )}
-          </form.Field>
         </div>
       </div>
 
@@ -507,35 +482,41 @@ export default function LoanEligibilityForm() {
               )}
             </form.Field>
 
-            <form.Field name="netMonthlyIncome">
-              {(field) => (
-                <div className={`${fieldWrapper} sm:max-w-[50%]`}>
-                  <Label htmlFor={field.name}>
-                    Net monthly income
-                    <Required />
-                  </Label>
-                  <Input
-                    id={field.name}
-                    name={field.name}
-                    type="number"
-                    min={1}
-                    inputMode="numeric"
-                    placeholder="e.g. 60000"
-                    value={field.state.value}
-                    onBlur={field.handleBlur}
-                    onKeyDown={blockNonDigitKeys}
-                    onChange={(e) =>
-                      field.handleChange(onlyDigits(e.target.value))
-                    }
-                  />
-                  {field.state.meta.errors.length > 0 && (
-                    <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
-                    </p>
-                  )}
-                </div>
-              )}
-            </form.Field>
+            <form.Subscribe selector={(state) => state.values.incomeType}>
+              {(incomeType) =>
+                incomeType !== IncomeType.SelfEmployed && (
+                  <form.Field name="netMonthlyIncome">
+                    {(field) => (
+                      <div className={`${fieldWrapper} sm:max-w-[50%]`}>
+                        <Label htmlFor={field.name}>
+                          Net monthly income
+                          <Required />
+                        </Label>
+                        <Input
+                          id={field.name}
+                          name={field.name}
+                          type="number"
+                          min={1}
+                          inputMode="numeric"
+                          placeholder="e.g. 60000"
+                          value={field.state.value}
+                          onBlur={field.handleBlur}
+                          onKeyDown={blockNonDigitKeys}
+                          onChange={(e) =>
+                            field.handleChange(onlyDigits(e.target.value))
+                          }
+                        />
+                        {field.state.meta.errors.length > 0 && (
+                          <p className={errorClass}>
+                            {field.state.meta.errors.join(", ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </form.Field>
+                )
+              }
+            </form.Subscribe>
           </CardContent>
         </Card>
 
@@ -611,7 +592,7 @@ export default function LoanEligibilityForm() {
                             />
 
                             {pledgedField.state.value === "yes" && (
-                              <div className={`${gridTwo} mt-1`}>
+                              <div className="mt-1 grid grid-cols-1 gap-4 sm:grid-cols-3">
                                 <form.Field name="collateralOutstandingAmount">
                                   {(outstandingField) => (
                                     <div className={fieldWrapper}>
@@ -676,6 +657,41 @@ export default function LoanEligibilityForm() {
                                         0 && (
                                         <p className={errorClass}>
                                           {rateField.state.meta.errors.join(
+                                            ", "
+                                          )}
+                                        </p>
+                                      )}
+                                    </div>
+                                  )}
+                                </form.Field>
+
+                                <form.Field name="collateralRemainingTenureMonths">
+                                  {(tenureField) => (
+                                    <div className={fieldWrapper}>
+                                      <Label htmlFor={tenureField.name}>
+                                        Tenure left (months)
+                                        <Required />
+                                      </Label>
+                                      <Input
+                                        id={tenureField.name}
+                                        name={tenureField.name}
+                                        type="number"
+                                        min={1}
+                                        inputMode="numeric"
+                                        placeholder="e.g. 84"
+                                        value={tenureField.state.value}
+                                        onBlur={tenureField.handleBlur}
+                                        onKeyDown={blockNonDigitKeys}
+                                        onChange={(e) =>
+                                          tenureField.handleChange(
+                                            onlyDigits(e.target.value)
+                                          )
+                                        }
+                                      />
+                                      {tenureField.state.meta.errors.length >
+                                        0 && (
+                                        <p className={errorClass}>
+                                          {tenureField.state.meta.errors.join(
                                             ", "
                                           )}
                                         </p>
@@ -1119,39 +1135,75 @@ export default function LoanEligibilityForm() {
 
                   {/* Follow-up: only shown when answer is "yes" */}
                   {field.state.value === "yes" && (
-                    <form.Field name="highCostDebtAmount">
-                      {(subField) => (
-                        <div className={insetPanel}>
-                          <div className={`${fieldWrapper} sm:max-w-[50%]`}>
-                            <Label htmlFor={subField.name}>
-                              Total outstanding amount
-                              <Required />
-                            </Label>
-                            <Input
-                              id={subField.name}
-                              name={subField.name}
-                              type="number"
-                              min={1}
-                              inputMode="numeric"
-                              placeholder="e.g. 25000"
-                              value={subField.state.value}
-                              onBlur={subField.handleBlur}
-                              onKeyDown={blockNonDigitKeys}
-                              onChange={(e) =>
-                                subField.handleChange(
-                                  onlyDigits(e.target.value)
-                                )
-                              }
-                            />
-                            {subField.state.meta.errors.length > 0 && (
-                              <p className={errorClass}>
-                                {subField.state.meta.errors.join(", ")}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                    </form.Field>
+                    <div className={insetPanel}>
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <form.Field name="highCostDebtAmount">
+                          {(subField) => (
+                            <div className={fieldWrapper}>
+                              <Label htmlFor={subField.name}>
+                                Total outstanding amount
+                                <Required />
+                              </Label>
+                              <Input
+                                id={subField.name}
+                                name={subField.name}
+                                type="number"
+                                min={1}
+                                inputMode="numeric"
+                                placeholder="e.g. 25000"
+                                value={subField.state.value}
+                                onBlur={subField.handleBlur}
+                                onKeyDown={blockNonDigitKeys}
+                                onChange={(e) =>
+                                  subField.handleChange(
+                                    onlyDigits(e.target.value)
+                                  )
+                                }
+                              />
+                              {subField.state.meta.errors.length > 0 && (
+                                <p className={errorClass}>
+                                  {subField.state.meta.errors.join(", ")}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </form.Field>
+
+                        <form.Field name="highCostDebtInterestRate">
+                          {(rateField) => (
+                            <div className={fieldWrapper}>
+                              <Label htmlFor={rateField.name}>
+                                Interest rate (% p.a.)
+                                <Required />
+                              </Label>
+                              <Input
+                                id={rateField.name}
+                                name={rateField.name}
+                                type="number"
+                                min={0}
+                                max={100}
+                                step={0.01}
+                                inputMode="decimal"
+                                placeholder="e.g. 30 (0 if interest-free)"
+                                value={rateField.state.value}
+                                onBlur={rateField.handleBlur}
+                                onKeyDown={blockNonDecimalKeys}
+                                onChange={(e) =>
+                                  rateField.handleChange(
+                                    onlyDecimalDigits(e.target.value)
+                                  )
+                                }
+                              />
+                              {rateField.state.meta.errors.length > 0 && (
+                                <p className={errorClass}>
+                                  {rateField.state.meta.errors.join(", ")}
+                                </p>
+                              )}
+                            </div>
+                          )}
+                        </form.Field>
+                      </div>
+                    </div>
                   )}
                 </div>
               )}
