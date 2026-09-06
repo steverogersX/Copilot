@@ -104,7 +104,7 @@ export function NegotiationCard({ result }: { result: EligibilityResult }) {
   const VerdictIcon = VERDICT_ICONS[o1.verdict];
 
   return (
-    <div className="flex max-h-[85vh] flex-col">
+    <div className="flex max-h-[85vh] max-h-[85dvh] flex-col">
       {/* Header - verdict, always visible */}
       <div className={cn("flex flex-col gap-2 rounded-t-xl px-5 pt-5 pb-4", VERDICT_HEADER_STYLES[o1.verdict])}>
         <div className="flex items-center gap-2 pr-6">
