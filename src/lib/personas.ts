@@ -24,6 +24,14 @@ import {
 // Wants ₹8,00,000 personal loan for a wedding.
 //
 // Assumptions not given in the persona description (flagged inline):
+// - `age` (29) and the "Bengaluru" city label in RUNTHROUGHS.md: the brief
+//   states none of the three personas' ages or cities. Age is not cosmetic
+//   here - the engine reads it directly for the retirement-tenure cap (§2
+//   in RULES.md) - so an invented value is a real, load-bearing assumption,
+//   not flavor text. At 29 with a 60-month tenure it never binds (ends at
+//   34, nowhere near the 60-year salaried retirement-age cap), so it
+//   doesn't change this scenario's outcome, but a different assumed age
+//   could have.
 // - `loanType`: the existing car loan has no matching option in the
 //   engine's three-loan-type scope (Personal/Business/TwoWheeler) -
 //   used Personal as the closest stand-in. It has no effect on the math
@@ -74,6 +82,11 @@ export const priya: LoanFormValues = {
 // Wants ₹15,00,000 for a second stock line and a delivery vehicle.
 //
 // Assumptions/gaps not given in the persona description (flagged inline):
+// - `age` (42) and the "Mysuru" city label in RUNTHROUGHS.md: not stated by
+//   the brief for any of the three personas - see the identical note on
+//   Priya's `age` above. At 42 with a 60-month tenure it never binds (ends
+//   at 47, nowhere near the 65-year self-employed retirement-age cap), so
+//   it doesn't change this scenario's outcome either.
 // - `monthlyExpenses`: not stated anywhere in the persona - the schema
 //   requires a positive figure, so ₹25,000/month is used as a placeholder
 //   household-expense estimate. This is the single most consequential
@@ -131,6 +144,13 @@ export const ravi: LoanFormValues = {
 // Wants ₹1,50,000 for an electric scooter to double delivery runs.
 //
 // Assumptions/gaps not given in the persona description (flagged inline):
+// - `age` (35) and the "Hubballi" city label in RUNTHROUGHS.md: not stated
+//   by the brief for any of the three personas - see the identical note on
+//   Priya's `age` above. At 35 with a 24-month tenure it never binds
+//   (ends at 37, nowhere near either retirement-age cap). Moot either way
+//   for this scenario's final numbers, since even a different assumed age
+//   that did trigger a tenure cap would just feed into the bounce+high-
+//   cost-debt override below, which zeroes every O2-O4 figure regardless.
 // - `monthlyExpenses`: not stated - the schema requires a positive
 //   figure. ₹18,000/month is used as a placeholder for a family of four
 //   in Hubballi with one earner. As with Ravi, this is a real guess and

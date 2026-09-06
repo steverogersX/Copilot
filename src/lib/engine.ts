@@ -445,7 +445,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     reason = `Your requested amount needs an EMI of ~₹${Math.round(neededEmi)}, above your safe ceiling of ~₹${Math.round(borrowerSafeEmiCeiling)}. Consider a smaller amount or a longer tenure.`;
   }
 
-  // 8. O2 - convert both EMI ceilings into loan amounts, at the same
+  // 9. O2 - convert both EMI ceilings into loan amounts, at the same
   // assumed rate used for neededEmi. Kept as two separate numbers per the
   // brief - never collapse lenderLikely and safeToCarry into one figure.
   const lenderLikelyAmount = calculateMaxPrincipal(
@@ -459,7 +459,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     tenureMonths
   );
 
-  // 8b. This only ever raises the LENDER-facing ceiling - safeToCarryAmount
+  // 9b. This only ever raises the LENDER-facing ceiling - safeToCarryAmount
   // above is already finalized and stays purely income-driven (§1). (The
   // routing decision itself, and the rate band it implies, were resolved
   // back at step 6, before assumedRate/neededEmi/these two amounts were
@@ -485,7 +485,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       ? "These two figures match here because the lender's own FOIR limit is tighter than your personal budget - the FOIR cap is doing the limiting in both cases, not a coincidence."
       : null;
 
-  // 9. O3 all-in APR band - fold the processing fee (+ GST) into the rate
+  // 10. O3 all-in APR band - fold the processing fee (+ GST) into the rate
   // band's low and high ends, using the low/high fee assumption respectively.
   const aprBandLow = calculateApr(
     amountWanted,
@@ -500,7 +500,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     rules.processingFee.highPercent
   );
 
-  // 10. O4 stress case - income drops by a fixed percentage; rate rise is
+  // 11. O4 stress case - income drops by a fixed percentage; rate rise is
   // the other named brief dimension but income drop is the primary case
   // here since it applies across income types, not just floating-rate loans.
   const stressIncomeDropPercent = rules.stressCase.incomeDropPercent / 100;
@@ -527,7 +527,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
           stressCaseEmiCeiling
         )} - plan for this before committing to the top of your range.`;
 
-  // 11. Explainability - every O2/O3 number gets its own one-sentence
+  // 12. Explainability - every O2/O3 number gets its own one-sentence
   // traceability string, generated here (not in the UI) so reasoning stays
   // alongside the math it explains rather than scattered into components.
   const safeToCarryReason = usesIncomeStabilityRange

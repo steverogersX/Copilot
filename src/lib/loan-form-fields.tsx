@@ -48,14 +48,3 @@ export const percentageValidator =
   (message: string) =>
   ({ value }: { value: string }) =>
     !value || Number(value) <= 0 || Number(value) > 100 ? message : undefined;
-
-// Only enforced when another field (e.g. incomeType) currently holds conditionValue —
-// so fields hidden behind a conditional section don't block submission.
-export const positiveNumberValidatorWhen =
-  (conditionFieldName: string, conditionValue: unknown, message: string) =>
-  ({ value, fieldApi }: { value: string; fieldApi: any }) => {
-    if (fieldApi.form.getFieldValue(conditionFieldName) !== conditionValue) {
-      return undefined;
-    }
-    return !value || Number(value) <= 0 ? message : undefined;
-  };
