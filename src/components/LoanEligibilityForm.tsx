@@ -1388,11 +1388,6 @@ export default function LoanEligibilityForm() {
         </Card>
 
         <div className="flex flex-col gap-3 rounded-xl border border-border bg-muted/40 p-4">
-          <p className={hintClass}>
-            This form will grow smarter over time — later steps may adapt
-            based on what you enter above.
-          </p>
-
           <form.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting]}
           >
