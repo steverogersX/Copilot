@@ -1,5 +1,18 @@
 import type { KeyboardEvent } from "react";
 
+// TanStack Form's Standard Schema adapter puts the raw validation issue
+// object in `field.state.meta.errors` (e.g. `{ message, path }`), not a
+// plain string - rendering one directly (or via `.join(", ")`) prints
+// "[object Object]" instead of the message. Extract the message safely
+// regardless of whether the entry is already a string or an issue object.
+export const formatFieldError = (error: unknown): string => {
+  if (typeof error === "string") return error;
+  if (error && typeof error === "object" && "message" in error) {
+    return String((error as { message: unknown }).message);
+  }
+  return String(error);
+};
+
 // Marks a field as required next to its label.
 export const Required = () => (
   <span className="text-destructive" aria-hidden="true">

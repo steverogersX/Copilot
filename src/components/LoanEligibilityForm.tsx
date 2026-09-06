@@ -42,6 +42,7 @@ import {
   Required,
   blockNonDecimalKeys,
   blockNonDigitKeys,
+  formatFieldError,
   onlyDecimalDigits,
   onlyDigits,
 } from "@/lib/loan-form-fields";
@@ -234,7 +235,7 @@ export default function LoanEligibilityForm() {
                 />
                 {subField.state.meta.errors.length > 0 && (
                   <p className={errorClass}>
-                    {subField.state.meta.errors.join(", ")}
+                    {subField.state.meta.errors.map(formatFieldError).join(", ")}
                   </p>
                 )}
               </div>
@@ -261,7 +262,7 @@ export default function LoanEligibilityForm() {
                 />
                 {subField.state.meta.errors.length > 0 && (
                   <p className={errorClass}>
-                    {subField.state.meta.errors.join(", ")}
+                    {subField.state.meta.errors.map(formatFieldError).join(", ")}
                   </p>
                 )}
               </div>
@@ -294,7 +295,7 @@ export default function LoanEligibilityForm() {
             />
             {subField.state.meta.errors.length > 0 && (
               <p className={errorClass}>
-                {subField.state.meta.errors.join(", ")}
+                {subField.state.meta.errors.map(formatFieldError).join(", ")}
               </p>
             )}
           </div>
@@ -339,7 +340,7 @@ export default function LoanEligibilityForm() {
                 />
                 {subField.state.meta.errors.length > 0 && (
                   <p className={errorClass}>
-                    {subField.state.meta.errors.join(", ")}
+                    {subField.state.meta.errors.map(formatFieldError).join(", ")}
                   </p>
                 )}
               </div>
@@ -366,7 +367,7 @@ export default function LoanEligibilityForm() {
                 />
                 {subField.state.meta.errors.length > 0 && (
                   <p className={errorClass}>
-                    {subField.state.meta.errors.join(", ")}
+                    {subField.state.meta.errors.map(formatFieldError).join(", ")}
                   </p>
                 )}
               </div>
@@ -402,7 +403,7 @@ export default function LoanEligibilityForm() {
             </p>
             {subField.state.meta.errors.length > 0 && (
               <p className={errorClass}>
-                {subField.state.meta.errors.join(", ")}
+                {subField.state.meta.errors.map(formatFieldError).join(", ")}
               </p>
             )}
           </div>
@@ -473,7 +474,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
                 </div>
@@ -503,7 +504,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
                 </div>
@@ -533,7 +534,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
                 </div>
@@ -564,7 +565,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
                 </div>
@@ -601,7 +602,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
 
@@ -641,7 +642,7 @@ export default function LoanEligibilityForm() {
                         />
                         {field.state.meta.errors.length > 0 && (
                           <p className={errorClass}>
-                            {field.state.meta.errors.join(", ")}
+                            {field.state.meta.errors.map(formatFieldError).join(", ")}
                           </p>
                         )}
                       </div>
@@ -705,7 +706,7 @@ export default function LoanEligibilityForm() {
                             />
                             {valueField.state.meta.errors.length > 0 && (
                               <p className={errorClass}>
-                                {valueField.state.meta.errors.join(", ")}
+                                {valueField.state.meta.errors.map(formatFieldError).join(", ")}
                               </p>
                             )}
                           </div>
@@ -752,9 +753,7 @@ export default function LoanEligibilityForm() {
                                       {outstandingField.state.meta.errors
                                         .length > 0 && (
                                         <p className={errorClass}>
-                                          {outstandingField.state.meta.errors.join(
-                                            ", "
-                                          )}
+                                          {outstandingField.state.meta.errors.map(formatFieldError).join(", ")}
                                         </p>
                                       )}
                                     </div>
@@ -789,9 +788,7 @@ export default function LoanEligibilityForm() {
                                       {rateField.state.meta.errors.length >
                                         0 && (
                                         <p className={errorClass}>
-                                          {rateField.state.meta.errors.join(
-                                            ", "
-                                          )}
+                                          {rateField.state.meta.errors.map(formatFieldError).join(", ")}
                                         </p>
                                       )}
                                     </div>
@@ -824,9 +821,7 @@ export default function LoanEligibilityForm() {
                                       {tenureField.state.meta.errors.length >
                                         0 && (
                                         <p className={errorClass}>
-                                          {tenureField.state.meta.errors.join(
-                                            ", "
-                                          )}
+                                          {tenureField.state.meta.errors.map(formatFieldError).join(", ")}
                                         </p>
                                       )}
                                     </div>
@@ -902,7 +897,7 @@ export default function LoanEligibilityForm() {
                                   />
                                   {typeField.state.meta.errors.length > 0 && (
                                     <p className={errorClass}>
-                                      {typeField.state.meta.errors.join(", ")}
+                                      {typeField.state.meta.errors.map(formatFieldError).join(", ")}
                                     </p>
                                   )}
                                 </div>
@@ -935,9 +930,7 @@ export default function LoanEligibilityForm() {
                                   {amountField.state.meta.errors.length >
                                     0 && (
                                     <p className={errorClass}>
-                                      {amountField.state.meta.errors.join(
-                                        ", "
-                                      )}
+                                      {amountField.state.meta.errors.map(formatFieldError).join(", ")}
                                     </p>
                                   )}
                                 </div>
@@ -973,7 +966,7 @@ export default function LoanEligibilityForm() {
                                   />
                                   {rateField.state.meta.errors.length > 0 && (
                                     <p className={errorClass}>
-                                      {rateField.state.meta.errors.join(", ")}
+                                      {rateField.state.meta.errors.map(formatFieldError).join(", ")}
                                     </p>
                                   )}
                                 </div>
@@ -1033,7 +1026,7 @@ export default function LoanEligibilityForm() {
                   />
                   {field.state.meta.errors.length > 0 && (
                     <p className={errorClass}>
-                      {field.state.meta.errors.join(", ")}
+                      {field.state.meta.errors.map(formatFieldError).join(", ")}
                     </p>
                   )}
                 </div>
@@ -1119,9 +1112,7 @@ export default function LoanEligibilityForm() {
                                           {typeField.state.meta.errors
                                             .length > 0 && (
                                             <p className={errorClass}>
-                                              {typeField.state.meta.errors.join(
-                                                ", "
-                                              )}
+                                              {typeField.state.meta.errors.map(formatFieldError).join(", ")}
                                             </p>
                                           )}
                                         </div>
@@ -1156,9 +1147,7 @@ export default function LoanEligibilityForm() {
                                           {amountField.state.meta.errors
                                             .length > 0 && (
                                             <p className={errorClass}>
-                                              {amountField.state.meta.errors.join(
-                                                ", "
-                                              )}
+                                              {amountField.state.meta.errors.map(formatFieldError).join(", ")}
                                             </p>
                                           )}
                                         </div>
@@ -1300,7 +1289,7 @@ export default function LoanEligibilityForm() {
                               />
                               {subField.state.meta.errors.length > 0 && (
                                 <p className={errorClass}>
-                                  {subField.state.meta.errors.join(", ")}
+                                  {subField.state.meta.errors.map(formatFieldError).join(", ")}
                                 </p>
                               )}
                             </div>
@@ -1334,7 +1323,7 @@ export default function LoanEligibilityForm() {
                               />
                               {rateField.state.meta.errors.length > 0 && (
                                 <p className={errorClass}>
-                                  {rateField.state.meta.errors.join(", ")}
+                                  {rateField.state.meta.errors.map(formatFieldError).join(", ")}
                                 </p>
                               )}
                             </div>
