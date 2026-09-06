@@ -124,6 +124,10 @@ export function NegotiationCard({ result }: { result: EligibilityResult }) {
             </p>
           )}
 
+          {!amountsDiffer && o2.ceilingsMatchNote && (
+            <p className="text-xs text-muted-foreground">{o2.ceilingsMatchNote}</p>
+          )}
+
           {o2.routedToSecuredProduct && o2.securedProductNote && (
             <p className="rounded-lg bg-muted/60 p-2 text-xs text-muted-foreground">
               {o2.securedProductNote}

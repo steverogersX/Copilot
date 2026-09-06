@@ -41,6 +41,7 @@ export type EligibilityResult = {
     safeToCarryReason: string;
     routedToSecuredProduct: boolean;
     securedProductNote: string | null;
+    ceilingsMatchNote: string | null;
   };
   o3: {
     rateBandLow: number;
@@ -251,6 +252,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         safeToCarryReason: "Your existing expenses and EMIs already use up all your take-home income, leaving no safe room for a new one.",
         routedToSecuredProduct: false,
         securedProductNote: null,
+        ceilingsMatchNote: null,
       },
       o3: {
         rateBandLow: 0,
@@ -294,6 +296,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
           safeToCarryReason: "No amount is safe to carry since no valid tenure remains before retirement age.",
           routedToSecuredProduct: false,
           securedProductNote: null,
+          ceilingsMatchNote: null,
         },
         o3: {
           rateBandLow: 0,
@@ -345,6 +348,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
         safeToCarryReason: "No amount is safe to carry since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.",
         routedToSecuredProduct: false,
         securedProductNote: null,
+        ceilingsMatchNote: null,
       },
       o3: {
         rateBandLow: 0,
@@ -469,6 +473,17 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       )} available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.`
     : null;
 
+  // lenderLikely and safeToCarry can legitimately land on the same number -
+  // whenever the lender's own FOIR cap is already tighter than the
+  // borrower's free cash, both figures are driven by the same FOIR ceiling.
+  // Flag this explicitly rather than leaving a sharp reader to wonder if the
+  // "two separate numbers" logic actually works when they happen to match.
+  const ceilingsMatchNote =
+    !routedToSecuredProduct &&
+    Math.round(finalLenderLikelyAmount) === Math.round(safeToCarryAmount)
+      ? "These two figures match here because the lender's own FOIR limit is tighter than your personal budget - the FOIR cap is doing the limiting in both cases, not a coincidence."
+      : null;
+
   // 9. O3 all-in APR band - fold the processing fee (+ GST) into the rate
   // band's low and high ends, using the low/high fee assumption respectively.
   const aprBandLow = calculateApr(
@@ -495,10 +510,21 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     0,
     Math.min(stressedFreeMoney, foirMaxNewEmi)
   );
-  const stressCaseNote = `If your income dropped by ${rules.stressCase.incomeDropPercent
-    }%, your safe EMI ceiling would fall to ~₹${Math.round(
-      stressCaseEmiCeiling
-    )} - plan for this before committing to the top of your range.`;
+  // The stress case can only ever match or fall below the normal ceiling
+  // (income is multiplied down, nothing else changes) - but when the FOIR
+  // cap was already the binding constraint on the normal ceiling, an income
+  // drop doesn't move the number at all, since the FOIR cap doesn't move
+  // with income the way freeMoney does. Say so plainly instead of claiming
+  // a "fall" that didn't happen.
+  const stressCaseNote =
+    Math.round(stressCaseEmiCeiling) === Math.round(recommendedEmiCeiling)
+      ? `Even if your income dropped by ${rules.stressCase.incomeDropPercent}%, your safe EMI ceiling would stay at ~₹${Math.round(
+          stressCaseEmiCeiling
+        )} - you're protected here by the lender's own FOIR limit, not just your budget.`
+      : `If your income dropped by ${rules.stressCase.incomeDropPercent
+        }%, your safe EMI ceiling would fall to ~₹${Math.round(
+          stressCaseEmiCeiling
+        )} - plan for this before committing to the top of your range.`;
 
   // 11. Explainability - every O2/O3 number gets its own one-sentence
   // traceability string, generated here (not in the UI) so reasoning stays
@@ -550,6 +576,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       lenderLikelyReason,
       safeToCarry: Math.round(safeToCarryAmount),
       safeToCarryReason,
+      ceilingsMatchNote,
       routedToSecuredProduct,
       securedProductNote,
     },
