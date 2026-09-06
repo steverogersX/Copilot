@@ -12,6 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -184,6 +185,7 @@ export default function LoanEligibilityForm() {
   const [result, setResult] = useState<EligibilityResult | null | undefined>(
     undefined
   );
+  const [resultOpen, setResultOpen] = useState(false);
 
   const form = useForm({
     defaultValues,
@@ -192,6 +194,7 @@ export default function LoanEligibilityForm() {
     },
     onSubmit: async ({ value }) => {
       setResult(engine(value));
+      setResultOpen(true);
     },
   });
 
@@ -420,15 +423,18 @@ export default function LoanEligibilityForm() {
         </p>
       </div>
 
-      {result !== undefined &&
-        (result === null ? (
-          <div className="rounded-xl border border-border bg-muted/40 p-4 text-sm text-muted-foreground">
-            We don&apos;t yet support this combination of loan type and
-            income type — see README for current scope.
-          </div>
-        ) : (
-          <NegotiationCard result={result} />
-        ))}
+      <Dialog open={resultOpen} onOpenChange={setResultOpen}>
+        <DialogContent className="max-w-md p-0">
+          {result === null ? (
+            <div className="p-5 text-sm text-muted-foreground">
+              We don&apos;t yet support this combination of loan type and
+              income type — see README for current scope.
+            </div>
+          ) : result ? (
+            <NegotiationCard result={result} />
+          ) : null}
+        </DialogContent>
+      </Dialog>
 
       <form
         className="flex flex-col gap-6"
