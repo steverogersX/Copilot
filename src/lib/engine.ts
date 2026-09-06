@@ -98,6 +98,15 @@ export type EligibilityResult = {
   };
 };
 
+// Indian digit grouping (₹19,30,127, not ₹1930127) for every rupee figure
+// that appears inside a reason string. The Negotiation Card already formats
+// its headline numbers this way, so without this the card reads as two
+// different systems: a grouped ₹19,30,127 headline sitting directly above an
+// ungrouped "₹110000" in the sentence explaining it.
+function formatRupees(amount: number): string {
+  return `₹${Math.round(amount).toLocaleString("en-IN")}`;
+}
+
 // Standard reducing-balance EMI formula.
 function calculateEmi(
   principal: number,
@@ -446,9 +455,9 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   if (hasRecentBounce && hasHighCostDebt) {
     return {
       tenureAdjustmentNote,
-      actionableNextStep: `Your ₹${Math.round(
+      actionableNextStep: `Your ${formatRupees(
         highCostDebtAmount
-      )} high-cost debt at ${highCostDebtRate}% p.a. is costing you roughly ₹${Math.round(
+      )} high-cost debt at ${highCostDebtRate}% p.a. is costing you roughly ${formatRupees(
         highCostDebtMonthlyCost
       )}/month. Clearing or refinancing it, and going ${rules.bounceOverride.recentWindowMonths}+ months without a new bounce, would lift this override on its own.`,
       o1: {
@@ -620,10 +629,10 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     reason = "A lender might approve this on paper, but your actual expenses leave no safe room for a new EMI.";
   } else if (neededEmi <= borrowerSafeEmiCeiling) {
     verdict = Verdict.Borrow;
-    reason = `Your requested EMI of ~₹${Math.round(neededEmi)} fits within your safe ceiling of ~₹${Math.round(borrowerSafeEmiCeiling)}.`;
+    reason = `Your requested EMI of ~${formatRupees(neededEmi)} fits within your safe ceiling of ~${formatRupees(borrowerSafeEmiCeiling)}.`;
   } else {
     verdict = Verdict.BorrowLess;
-    reason = `Your requested amount needs an EMI of ~₹${Math.round(neededEmi)}, above your safe ceiling of ~₹${Math.round(borrowerSafeEmiCeiling)}. Consider a smaller amount or a longer tenure.`;
+    reason = `Your requested amount needs an EMI of ~${formatRupees(neededEmi)}, above your safe ceiling of ~${formatRupees(borrowerSafeEmiCeiling)}. Consider a smaller amount or a longer tenure.`;
   }
 
   // 8b. Actionable next step - only populated on a "don't borrow" verdict,
@@ -663,7 +672,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     : lenderLikelyAmount;
 
   const securedProductNote = routedToSecuredProduct
-    ? `Because you have unencumbered collateral worth ~₹${Math.round(
+    ? `Because you have unencumbered collateral worth ~${formatRupees(
         usableCollateralValue
       )} available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.`
     : null;
@@ -719,11 +728,11 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   // a "fall" that didn't happen.
   const stressCaseNote =
     Math.round(stressCaseEmiCeiling) === Math.round(recommendedEmiCeiling)
-      ? `Even if your income dropped by ${rules.stressCase.incomeDropPercent}%, your safe EMI ceiling would stay at ~₹${Math.round(
+      ? `Even if your income dropped by ${rules.stressCase.incomeDropPercent}%, your safe EMI ceiling would stay at ~${formatRupees(
           stressCaseEmiCeiling
         )} - you're protected here by the lender's own FOIR limit, not just your budget.`
       : `If your income dropped by ${rules.stressCase.incomeDropPercent
-        }%, your safe EMI ceiling would fall to ~₹${Math.round(
+        }%, your safe EMI ceiling would fall to ~${formatRupees(
           stressCaseEmiCeiling
         )} - plan for this before committing to the top of your range.`;
 
@@ -736,12 +745,18 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
       : "";
   const safeToCarryReason =
     (usesIncomeStabilityRange
-      ? `Based on your lowest-earning month (~₹${Math.round(
+      ? `Based on your lowest-earning month (~${formatRupees(
           monthlyIncomeForMath
-        )}), minus your monthly expenses (₹${formData.monthlyExpenses}) and existing obligations (~₹${Math.round(
+        )}), minus your monthly expenses (${formatRupees(
+          Number(formData.monthlyExpenses)
+        )}) and existing obligations (~${formatRupees(
           existingObligations
         )}) — using your worst month, not your average, keeps this figure safe.`
-      : `Based on your net monthly income (₹${formData.netMonthlyIncome}), minus your monthly expenses (₹${formData.monthlyExpenses}) and existing obligations (~₹${Math.round(
+      : `Based on your net monthly income (${formatRupees(
+          Number(formData.netMonthlyIncome)
+        )}), minus your monthly expenses (${formatRupees(
+          Number(formData.monthlyExpenses)
+        )}) and existing obligations (~${formatRupees(
           existingObligations
         )}).`) + bounceHaircutNote;
 
@@ -752,16 +767,16 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   const collateralPathWon =
     routedToSecuredProduct && collateralBasedLenderAmount >= lenderLikelyAmount;
   const lenderLikelyReason = collateralPathWon
-    ? `Based on your unencumbered collateral (~₹${Math.round(
+    ? `Based on your unencumbered collateral (~${formatRupees(
         usableCollateralValue
-      )}) at a typical ${rules.collateral.ltvPercent}% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹${Math.round(
+      )}) at a typical ${rules.collateral.ltvPercent}% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~${formatRupees(
         lenderLikelyAmount
       )}) would support on its own.`
     : `Based on a lender's ${rules.foir.capPercent}% FOIR cap applied to your ${
         usesIncomeStabilityRange ? "average" : "net"
-      } monthly income (~₹${Math.round(
+      } monthly income (~${formatRupees(
         lenderFacingIncome
-      )}), minus your existing obligations (~₹${Math.round(foirExistingObligations)}${
+      )}), minus your existing obligations (~${formatRupees(foirExistingObligations)}${
         rules.monthsRemainingWeighting.enabled &&
         Math.round(foirExistingObligations) !== Math.round(existingObligations)
           ? ", weighted down for EMIs that will finish before this loan's tenure ends"

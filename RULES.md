@@ -168,10 +168,16 @@ penalty the borrower can't see.
 
 O2 always reports two separate numbers: `lenderLikely` (what a lender's FOIR
 math alone would likely approve) and `safeToCarry` (the smaller of that and
-what the borrower's actual free cash flow can safely support). These are
-**never** collapsed into one figure — the app always recommends the safer
-number (`safeToCarry`) as the actionable guidance, even when the lender's
-number is larger.
+what the borrower's actual free cash flow can safely support). They are
+computed from different inputs and reported as two distinct figures — the app
+always recommends the safer number (`safeToCarry`) as the actionable
+guidance, even when the lender's number is larger.
+
+They can still legitimately land on the same value, for a borrower with no
+existing EMIs (so the monthsRemaining weighting has nothing to weight) whose
+free cash exceeds the FOIR cap. That is a real outcome, not a bug, and
+`ceilingsMatchNote` says so explicitly on the card rather than leaving the
+reader to wonder whether the two-number logic actually ran.
 
 **Why:** a lender's approval ceiling and a borrower's true safety margin are
 different things. A lender approving a bigger loan than a borrower can

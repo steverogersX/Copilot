@@ -25,7 +25,9 @@ a property of the borrower, not of what they're calling the loan today.
 On submit, `engine()` runs a fixed sequence: affordability from income minus
 expenses minus existing obligations, a hard age/retirement-tenure cap, a
 bounce-plus-high-cost-debt override that can force "don't borrow" outright,
-then a FOIR ceiling, then collateral-based secured-product routing, then the
+then a graded bounce ladder for everything below that override, then two
+FOIR ceilings (one lender-facing, one borrower-facing — they differ on
+purpose, see below), then collateral-based secured-product routing, then the
 rate band, then the APR band, then a stress case. Every one of those
 produces a plain-English reason string alongside the number — that was a
 deliberate constraint from day one: no number is allowed to exist without
@@ -47,32 +49,51 @@ scenarios to confirm nothing else moved.
 
 ## What I'd defend without hesitation
 
-- **The bounce+debt override is deliberately narrow.** A bounce alone or
-  high-cost debt alone never forces "don't borrow" — only the combination
-  does, because either signal in isolation is too weak to override math
-  that otherwise says the borrower is fine. Anita triggers it; Priya and
-  Ravi don't.
+- **The lender ceiling and the safe ceiling treat the same debt
+  differently, on purpose.** An existing EMI that ends partway through the
+  new loan is weighted down for the lender-facing FOIR check, because that
+  is how a bank averages an obligation across a loan's life. It is *not*
+  weighted for the borrower-safe ceiling, because the borrower actually
+  pays it in full every month until it ends. Priya's ₹14,000 car loan with
+  24 months left counts as ₹5,600 to the lender and the full ₹14,000 to
+  her. That asymmetry is the single thing I'd most want to be asked about.
+- **The bounce override is narrow, but bounces are never ignored.** Only a
+  recent bounce *combined with* high-cost debt forces "don't borrow",
+  because either signal alone is too weak to override otherwise-fine math.
+  Everything below that runs through a graded ladder instead: an old
+  isolated bounce does nothing, one recent bounce costs a confidence level
+  and widens the band, and repeated or spread-across-loans bounces widen it
+  further and haircut the safe amount. Bounces spread across several loans
+  are treated as worse than the same count on one loan, because that is
+  money running out across the board rather than one dispute.
+- **"Don't borrow" is never a dead end.** Anita still gets a real
+  indicative rate band, clearly labelled as reference-only, plus a next
+  step naming her actual blocker: her ₹35,000 at 30% is costing roughly
+  ₹3,412 a month, and clearing it plus three clean months lifts the
+  override by itself.
 - **Unknown credit score gets its own band, not a default score.** It's
   wider and lower-confidence than any tiered band — never worst-case,
   never best-case.
-- **safeToCarry and lenderLikely never collapse into one number**, and the
-  UI always leads with the safer one, even when a lender would approve
-  more.
 
 ## Where I'd push back on myself
 
 Being honest about the soft spots, since these are the ones I'd expect to
 get picked apart in a follow-up:
 
-- **"Confidence widens with silence" is real but narrower than it sounds.**
-  Only two things move the labeled confidence value: whether credit score
-  is known, and whether a self-employed/informal borrower is under two
-  years in the work. Every other optional answer (existing EMIs, bounces,
-  high-cost debt, collateral) changes the *numbers* — which is arguably the
-  more important effect — but doesn't touch the confidence label itself. If
-  someone asked "does answering more questions make you more confident?"
-  the honest answer is "it makes the numbers more accurate; only two
-  specific answers move the confidence badge."
+- **There is no borrower-side cushion, and that's the gap I'd fix first.**
+  The safe ceiling is the lesser of the lender's FOIR cap and every spare
+  rupee after expenses and EMIs. Neither of those is a savings buffer. For
+  Priya the FOIR cap binds at ₹41,000, which still puts 75.5% of her income
+  into rent plus EMIs. Nothing in the engine says "keep something back",
+  and I'd add a residual-income floor or a borrower FOIR below the lender's
+  before I'd add any new feature.
+- **"Confidence widens with silence" is real but it's a three-level label,
+  not a width.** Credit score, years in the work, and recent bounces each
+  move it. What it does *not* do is respond to sheer volume of unanswered
+  optional questions — someone who skips collateral and existing EMIs
+  entirely gets the same badge as someone who filled everything in. The
+  rate band does widen on real signals, but the label isn't a completeness
+  score, and I'd describe it that way rather than overclaiming.
 - **FOIR (50%), collateral LTV (60%), and the stress-case income drop
   (20%) are each a single fixed number**, not varied by income bracket or
   lender type, even though the literature I pulled these from cites wider
@@ -84,12 +105,12 @@ get picked apart in a follow-up:
 - **Co-applicant income isn't modeled at all.** Ravi's wife earning ₹18,000
   teaching never enters the math. His numbers are his alone, which likely
   understates what a real lender would extend to the household.
-- **A borrower can double-count a loan.** If Ravi's shop premises were
-  already pledged against an existing loan, and he also listed that same
-  loan under "existing EMIs," the engine has no way to know those are the
-  same debt and would subtract it twice. Disclosed in RULES.md; not fixed,
-  because the right fix is a UI-side warning at the point of the question,
-  not a heuristic guessing at free-text overlap.
+- **Double-counting a pledged loan is mitigated, not eliminated.** If the
+  collateral is already pledged, the form now warns against also listing
+  that same loan under "existing EMIs". But it's a warning, not a
+  constraint — a determined user can still enter it twice and have it
+  subtracted twice. I went with the warning rather than a heuristic trying
+  to guess overlap between free-text entries.
 - **Business, LAP, and two-wheeler rate bands are less rigorously sourced
   than the personal-loan bands.** Personal loan tiers are cross-checked
   against four sources; the other three tables lean on fewer, and the
@@ -101,12 +122,15 @@ get picked apart in a follow-up:
 
 In order of what would actually move a number for more borrowers:
 
-1. **Co-applicant income**, with a haircut (not a straight add), still
-   capped by the same FOIR logic — this is the single biggest real-world
-   gap given how common joint applications are in India.
-2. **A UI-side de-duplication warning** on the collateral question ("is
-   this the same loan you listed above?") to close the double-counting
-   gap without engine-side guessing.
+1. **A borrower-side cushion**, as described above — either a residual
+   income floor or a borrower FOIR set below the lender's. It's the
+   difference between telling someone what they can technically service
+   and telling them what they should actually sign, which is the whole
+   premise of the product.
+2. **Co-applicant income**, with a haircut (not a straight add), still
+   capped by the same FOIR logic — the biggest real-world gap given how
+   common joint applications are in India. Ravi's wife earning ₹18,000
+   currently counts for nothing.
 3. **Income-bracket-aware FOIR and LTV** instead of one fixed number each —
    even a coarse three-tier version would be more honest than a single
    constant applied to a ₹26,000/month gig worker and a ₹1,10,000/month

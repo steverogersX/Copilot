@@ -41,8 +41,14 @@ No environment variables, no database, no backend, no API keys required.
   source, plus the branching logic and known limitations
 - `WALKTHROUGH.md` — five-minute written walkthrough: what's solid, what's
   a known simplification, what's next, what I'd cut
+- `RUNTHROUGHS.md` — the three brief personas end to end: questions asked,
+  all four outputs, and the Negotiation Card for each
 - `src/lib/scenarios.test.ts` — the three persona run-throughs below,
   runnable directly against the engine
+- `e2e/capture-cards.ts` — regenerates the three Negotiation Card
+  screenshots by driving the real form in a browser, so the images in
+  RUNTHROUGHS.md stay reproducible when a rule changes. Needs Playwright
+  installed separately; see the header comment in that file.
 
 ## Scope
 

@@ -230,7 +230,9 @@ function runScenario(name: string, formData: LoanFormValues) {
     );
     assert(
       result.actionableNextStep !== null &&
-        result.actionableNextStep.includes("35000") &&
+        // Indian digit grouping, matching how the card renders every other
+        // rupee figure - "35,000", not "35000".
+        result.actionableNextStep.includes("35,000") &&
         result.actionableNextStep.toLowerCase().includes("month"),
       `actionableNextStep names the specific high-cost-debt blocker and its monthly cost, so the "don't borrow" isn't a dead end (got: "${result.actionableNextStep}")`
     );

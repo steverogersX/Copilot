@@ -40,11 +40,11 @@ applicant with no collateral, and the form never asked.
 ### Outputs
 
 **O1 — Borrow**
-> Your requested EMI of ~₹16994 fits within your safe ceiling of ~₹41000.
+> Your requested EMI of ~₹16,994 fits within your safe ceiling of ~₹41,000.
 
 **O2 — Maximum amount**
-- Lender likely to offer: **₹23,25,568** — Based on a lender's 50% FOIR cap applied to your net monthly income (~₹110000), minus your existing obligations (~₹5600, weighted down for EMIs that will finish before this loan's tenure ends).
-- Safe to carry: **₹19,30,127** — Based on your net monthly income (₹110000), minus your monthly expenses (₹28000) and existing obligations (~₹14000).
+- Lender likely to offer: **₹23,25,568** — Based on a lender's 50% FOIR cap applied to your net monthly income (~₹1,10,000), minus your existing obligations (~₹5,600, weighted down for EMIs that will finish before this loan's tenure ends).
+- Safe to carry: **₹19,30,127** — Based on your net monthly income (₹1,10,000), minus your monthly expenses (₹28,000) and existing obligations (~₹14,000).
 - *No match note here — the lender ceiling and safe ceiling now use genuinely different obligation totals (her car EMI's remaining 24 months are weighted down for the lender-facing figure, but count in full for the safe figure, since she pays it in full every month regardless), so the two numbers differ rather than coincidentally landing on the same figure.*
 
 **O3 — Fair rate**
@@ -63,7 +63,7 @@ applicant with no collateral, and the form never asked.
   | 72 months | ₹14,817 |
   | 48 months | ₹20,286 |
 
-- Stress case: Even if your income dropped by 20%, your safe EMI ceiling would stay at ~₹41000 - you're protected here by the lender's own FOIR limit, not just your budget.
+- Stress case: Even if your income dropped by 20%, your safe EMI ceiling would stay at ~₹41,000 - you're protected here by the lender's own FOIR limit, not just your budget.
 
 ### Negotiation Card
 ![Priya's Negotiation Card](./runthroughs/priya-card.png)
@@ -113,12 +113,12 @@ tenure), since he answered "no" to it already being pledged.
 ### Outputs
 
 **O1 — Borrow less**
-> Your requested amount needs an EMI of ~₹31138, above your safe ceiling of ~₹15000. Consider a smaller amount or a longer tenure.
+> Your requested amount needs an EMI of ~₹31,138, above your safe ceiling of ~₹15,000. Consider a smaller amount or a longer tenure.
 
 **O2 — Maximum amount**
-- Lender likely to offer: **₹27,00,000** — Based on your unencumbered collateral (~₹4500000) at a typical 60% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹1445201) would support on its own.
-- Safe to carry: **₹7,22,601** — Based on your lowest-earning month (~₹40000), minus your monthly expenses (₹25000) and existing obligations (~₹0) — using your worst month, not your average, keeps this figure safe.
-- Routed to a secured product: **Yes.** Because you have unencumbered collateral worth ~₹4500000 available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.
+- Lender likely to offer: **₹27,00,000** — Based on your unencumbered collateral (~₹45,00,000) at a typical 60% loan-to-value, rather than your income alone - this is higher than what your income-based FOIR limit (~₹14,45,201) would support on its own.
+- Safe to carry: **₹7,22,601** — Based on your lowest-earning month (~₹40,000), minus your monthly expenses (₹25,000) and existing obligations (~₹0) — using your worst month, not your average, keeps this figure safe.
+- Routed to a secured product: **Yes.** Because you have unencumbered collateral worth ~₹45,00,000 available, you likely qualify for a secured loan (Loan Against Property) instead of an unsecured loan - this typically means a lower rate and a higher approval amount than going unsecured. Your safe-to-carry figure is unaffected by this - it stays based on your real income, since a lower rate doesn't change what you can actually afford to repay. Borrowing up to the higher lender-likely figure risks the pledged asset if you can't keep up - treat any gap between the two numbers as a warning, not a bonus.
 
 **O3 — Fair rate**
 - Rate band: 9% – 17%
@@ -136,7 +136,7 @@ tenure), since he answered "no" to it already being pledged.
   | 72 months | ₹27,038 |
   | 48 months | ₹37,328 |
 
-- Stress case: If your income dropped by 20%, your safe EMI ceiling would fall to ~₹7000 - plan for this before committing to the top of your range.
+- Stress case: If your income dropped by 20%, your safe EMI ceiling would fall to ~₹7,000 - plan for this before committing to the top of your range.
 
 ### Negotiation Card
 ![Ravi's Negotiation Card](./runthroughs/ravi-card.png)
@@ -190,7 +190,7 @@ underlying field.
 > You have a recently bounced EMI together with existing high-cost debt - this combination is real-world evidence of financial strain that overrides the affordability math, regardless of how comfortable the numbers look on paper.
 
 **What would change this**
-> Your ₹35000 high-cost debt at 30% p.a. is costing you roughly ₹3412/month. Clearing or refinancing it, and going 3+ months without a new bounce, would lift this override on its own.
+> Your ₹35,000 high-cost debt at 30% p.a. is costing you roughly ₹3,412/month. Clearing or refinancing it, and going 3+ months without a new bounce, would lift this override on its own.
 
 **O2 — Maximum amount**
 - Lender likely to offer: **₹0** — No amount is offered since a recent EMI bounce combined with existing high-cost debt overrides the affordability math.
