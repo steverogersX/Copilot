@@ -840,17 +840,17 @@ export default function LoanEligibilityForm() {
           </CardContent>
         </Card>
 
-        {/* 4. Existing obligations */}
+        {/* 4. Existing EMIs */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold">
-              Existing obligations
+              Existing EMIs
             </CardTitle>
             <CardDescription>
-              Other EMIs and monthly expenses you&apos;re already carrying.
+              Other loan EMIs you&apos;re already paying.
             </CardDescription>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
+          <CardContent>
             <form.Field name="existingEmis" mode="array">
               {(field) => (
                 <div className={fieldWrapper}>
@@ -892,32 +892,7 @@ export default function LoanEligibilityForm() {
                               onClick={() => field.removeValue(index)}
                             />
                           </div>
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                            <form.Field name={`existingEmis[${index}].type`}>
-                              {(typeField) => (
-                                <div className={fieldWrapper}>
-                                  <Label htmlFor={typeField.name}>
-                                    EMI type
-                                    <Required />
-                                  </Label>
-                                  <EnumSelect
-                                    id={typeField.name}
-                                    name={typeField.name}
-                                    value={typeField.state.value}
-                                    onChange={typeField.handleChange}
-                                    options={Object.values(LoanType)}
-                                    labels={LOAN_TYPE_LABELS}
-                                    placeholder="Select type"
-                                  />
-                                  {typeField.state.meta.errors.length > 0 && (
-                                    <p className={errorClass}>
-                                      {typeField.state.meta.errors.map(formatFieldError).join(", ")}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
-                            </form.Field>
-
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <form.Field name={`existingEmis[${index}].amount`}>
                               {(amountField) => (
                                 <div className={fieldWrapper}>
@@ -952,35 +927,34 @@ export default function LoanEligibilityForm() {
                             </form.Field>
 
                             <form.Field
-                              name={`existingEmis[${index}].interestRate`}
+                              name={`existingEmis[${index}].monthsRemaining`}
                             >
-                              {(rateField) => (
+                              {(monthsField) => (
                                 <div className={fieldWrapper}>
-                                  <Label htmlFor={rateField.name}>
-                                    Interest rate (% p.a.)
+                                  <Label htmlFor={monthsField.name}>
+                                    Months remaining
                                     <Required />
                                   </Label>
                                   <Input
-                                    id={rateField.name}
-                                    name={rateField.name}
+                                    id={monthsField.name}
+                                    name={monthsField.name}
                                     type="number"
-                                    min={0.01}
-                                    max={100}
-                                    step={0.01}
-                                    inputMode="decimal"
-                                    placeholder="e.g. 12.5"
-                                    value={rateField.state.value}
-                                    onBlur={rateField.handleBlur}
-                                    onKeyDown={blockNonDecimalKeys}
+                                    min={1}
+                                    inputMode="numeric"
+                                    placeholder="e.g. 24"
+                                    value={monthsField.state.value}
+                                    onBlur={monthsField.handleBlur}
+                                    onKeyDown={blockNonDigitKeys}
                                     onChange={(e) =>
-                                      rateField.handleChange(
-                                        onlyDecimalDigits(e.target.value)
+                                      monthsField.handleChange(
+                                        onlyDigits(e.target.value)
                                       )
                                     }
                                   />
-                                  {rateField.state.meta.errors.length > 0 && (
+                                  {monthsField.state.meta.errors.length >
+                                    0 && (
                                     <p className={errorClass}>
-                                      {rateField.state.meta.errors.map(formatFieldError).join(", ")}
+                                      {monthsField.state.meta.errors.map(formatFieldError).join(", ")}
                                     </p>
                                   )}
                                 </div>
@@ -999,9 +973,8 @@ export default function LoanEligibilityForm() {
                     className="self-start text-muted-foreground hover:text-foreground"
                     onClick={() =>
                       field.pushValue({
-                        type: "",
                         amount: "",
-                        interestRate: "",
+                        monthsRemaining: "",
                       })
                     }
                   >
@@ -1011,7 +984,20 @@ export default function LoanEligibilityForm() {
                 </div>
               )}
             </form.Field>
+          </CardContent>
+        </Card>
 
+        {/* 5. Monthly expenses */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">
+              Monthly expenses
+            </CardTitle>
+            <CardDescription>
+              What you spend each month, apart from EMIs.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
             <form.Field name="monthlyExpenses">
               {(field) => (
                 <div className={`${fieldWrapper} sm:max-w-[50%]`}>
@@ -1049,7 +1035,7 @@ export default function LoanEligibilityForm() {
           </CardContent>
         </Card>
 
-        {/* 5. Repayment history */}
+        {/* 6. Repayment history */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold">
@@ -1106,75 +1092,13 @@ export default function LoanEligibilityForm() {
                                   </div>
                                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                                     <form.Field
-                                      name={`emiBounces[${index}].type`}
-                                    >
-                                      {(typeField) => (
-                                        <div className={fieldWrapper}>
-                                          <Label htmlFor={typeField.name}>
-                                            EMI type
-                                            <Required />
-                                          </Label>
-                                          <EnumSelect
-                                            id={typeField.name}
-                                            name={typeField.name}
-                                            value={typeField.state.value}
-                                            onChange={typeField.handleChange}
-                                            options={Object.values(LoanType)}
-                                            labels={LOAN_TYPE_LABELS}
-                                            placeholder="Select type"
-                                          />
-                                          {typeField.state.meta.errors
-                                            .length > 0 && (
-                                            <p className={errorClass}>
-                                              {typeField.state.meta.errors.map(formatFieldError).join(", ")}
-                                            </p>
-                                          )}
-                                        </div>
-                                      )}
-                                    </form.Field>
-
-                                    <form.Field
-                                      name={`emiBounces[${index}].amount`}
-                                    >
-                                      {(amountField) => (
-                                        <div className={fieldWrapper}>
-                                          <Label htmlFor={amountField.name}>
-                                            EMI amount
-                                            <Required />
-                                          </Label>
-                                          <Input
-                                            id={amountField.name}
-                                            name={amountField.name}
-                                            type="number"
-                                            min={1}
-                                            inputMode="numeric"
-                                            placeholder="e.g. 5000"
-                                            value={amountField.state.value}
-                                            onBlur={amountField.handleBlur}
-                                            onKeyDown={blockNonDigitKeys}
-                                            onChange={(e) =>
-                                              amountField.handleChange(
-                                                onlyDigits(e.target.value)
-                                              )
-                                            }
-                                          />
-                                          {amountField.state.meta.errors
-                                            .length > 0 && (
-                                            <p className={errorClass}>
-                                              {amountField.state.meta.errors.map(formatFieldError).join(", ")}
-                                            </p>
-                                          )}
-                                        </div>
-                                      )}
-                                    </form.Field>
-
-                                    <form.Field
                                       name={`emiBounces[${index}].frequency`}
                                     >
                                       {(frequencyField) => (
                                         <div className={fieldWrapper}>
                                           <Label htmlFor={frequencyField.name}>
                                             How frequent
+                                            <Required />
                                           </Label>
                                           <EnumSelect
                                             id={frequencyField.name}
@@ -1189,6 +1113,12 @@ export default function LoanEligibilityForm() {
                                             labels={EMI_BOUNCE_FREQUENCY_LABELS}
                                             placeholder="Select frequency"
                                           />
+                                          {frequencyField.state.meta.errors
+                                            .length > 0 && (
+                                            <p className={errorClass}>
+                                              {frequencyField.state.meta.errors.map(formatFieldError).join(", ")}
+                                            </p>
+                                          )}
                                         </div>
                                       )}
                                     </form.Field>
@@ -1200,6 +1130,7 @@ export default function LoanEligibilityForm() {
                                         <div className={fieldWrapper}>
                                           <Label htmlFor={recencyField.name}>
                                             How recent
+                                            <Required />
                                           </Label>
                                           <EnumSelect
                                             id={recencyField.name}
@@ -1214,6 +1145,12 @@ export default function LoanEligibilityForm() {
                                             labels={EMI_BOUNCE_RECENCY_LABELS}
                                             placeholder="Select how recent"
                                           />
+                                          {recencyField.state.meta.errors
+                                            .length > 0 && (
+                                            <p className={errorClass}>
+                                              {recencyField.state.meta.errors.map(formatFieldError).join(", ")}
+                                            </p>
+                                          )}
                                         </div>
                                       )}
                                     </form.Field>
@@ -1230,8 +1167,6 @@ export default function LoanEligibilityForm() {
                             className="self-start text-muted-foreground hover:text-foreground"
                             onClick={() =>
                               bouncesField.pushValue({
-                                type: "",
-                                amount: "",
                                 frequency: "",
                                 recency: "",
                               })
@@ -1250,7 +1185,7 @@ export default function LoanEligibilityForm() {
           </CardContent>
         </Card>
 
-        {/* 6. Credit & other debt */}
+        {/* 7. Credit & other debt */}
         <Card>
           <CardHeader>
             <CardTitle className="text-sm font-semibold">

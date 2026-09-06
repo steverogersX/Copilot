@@ -32,13 +32,9 @@ import {
 //   34, nowhere near the 60-year salaried retirement-age cap), so it
 //   doesn't change this scenario's outcome, but a different assumed age
 //   could have.
-// - `loanType`: the existing car loan has no matching option in the
-//   engine's three-loan-type scope (Personal/Business/TwoWheeler) -
-//   used Personal as the closest stand-in. It has no effect on the math
-//   either way, since existingEmis only contributes its `amount`.
-// - `existingEmis[0].interestRate`: not stated by the persona; the
-//   engine never reads this field for its math (only `amount` is
-//   summed), so an arbitrary plausible car-loan rate (9.5%) is used.
+// - `existingEmis[0].monthsRemaining`: the persona states "2 years left"
+//   on the car loan (24 months) - this field is UI-only and isn't read
+//   by the engine's math (only `amount` is summed).
 // - `tenurePreferred`: not stated for the new personal loan; 60 months
 //   is used as a typical personal-loan tenure for a large one-off
 //   expense like a wedding.
@@ -53,9 +49,7 @@ export const priya: LoanFormValues = {
   yearsInBusiness: "",
   age: "29",
   netMonthlyIncome: "110000",
-  existingEmis: [
-    { type: LoanType.Personal, amount: "14000", interestRate: "9.5" },
-  ],
+  existingEmis: [{ amount: "14000", monthsRemaining: "24" }],
   monthlyExpenses: "28000",
   hadEmiBounces: "no",
   emiBounces: [],
@@ -196,8 +190,6 @@ export const anita: LoanFormValues = {
   hadEmiBounces: "yes",
   emiBounces: [
     {
-      type: LoanType.Personal,
-      amount: "3000",
       frequency: "1",
       recency: EmiBounceRecency.WithinOneMonth,
     },

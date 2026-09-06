@@ -236,14 +236,15 @@ loan they want right now.
   two-wheeler loan products observed to require 1+ year minimum work
   tenure) sometimes disqualify below a minimum tenure outright. This app
   only downgrades confidence — it does not reject on this basis.
-- **Existing-loan double-counting on pledged collateral is unresolved.** If a
-  borrower already listed the loan against their pledged collateral under
-  "Existing EMIs," it will also be counted (as an estimated EMI) via the
-  collateral question — there is no reliable way to de-duplicate a free-text
-  EMI entry against the collateral answer in the engine. This is a known,
-  disclosed limitation, not a silently "fixed" one; the intended fix is a
-  UI-side warning at the point of the collateral question, not an
-  engine-side de-duplication heuristic.
+- **Existing-loan double-counting on pledged collateral is mitigated in the
+  UI, not fixed in the engine.** If a borrower already listed the loan
+  against their pledged collateral under "Existing EMIs," it will also be
+  counted (as an estimated EMI) via the collateral question — the form now
+  shows a warning in the Existing EMIs section when the borrower has said
+  their collateral is already pledged, but there is still no reliable way
+  to de-duplicate a free-text EMI entry against the collateral answer in
+  the engine itself, so a borrower who ignores the warning will still be
+  double-counted.
 - **Co-applicant income is not modeled at all.** A borrower applying jointly
   (e.g., with a spouse) receives individual-only numbers, which may
   understate their real eligibility.

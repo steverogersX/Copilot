@@ -17,7 +17,7 @@ loan, EMI ₹14,000, 2 years left. Credit score 780. Rents at ₹28,000. Wants
 | Tenure preferred | 60 months |
 | Age | 29 |
 | Net monthly income | ₹1,10,000 |
-| Existing EMIs | 1 — Personal, ₹14,000/month, 9.5% p.a. |
+| Existing EMIs | 1 — ₹14,000/month, 24 months remaining |
 | Monthly expenses | ₹28,000 |
 | Had EMI bounces | No |
 | Has high-cost debt | No |
@@ -28,8 +28,8 @@ loan, EMI ₹14,000, 2 years left. Credit score 780. Rents at ₹28,000. Wants
 
 Loan type · Amount wanted · Tenure preferred (months) · Age · Income type ·
 Net monthly income · Do you own any property/asset you could pledge as
-collateral? (Yes/No) · Existing EMIs (EMI type, Amount/month, Interest
-rate) · Your monthly expenses · Any EMI bounces? (Yes/No) · Any existing
+collateral? (Yes/No) · Existing EMIs (Amount/month, Months remaining) ·
+Your monthly expenses · Any EMI bounces? (Yes/No) · Any existing
 high-cost/informal debt? (Yes/No) · Credit score · I don't know my credit
 score
 
@@ -173,17 +173,16 @@ Loan type · Amount wanted · Tenure preferred (months) · Age · Income type ·
 Income stability (monthly): Low income month, High income month · How long
 have you been doing this work? · Do you own any property/asset you could
 pledge as collateral? (Yes/No) · Existing EMIs · Your monthly expenses ·
-Any EMI bounces? (Yes/No) · EMI type, EMI amount, How frequent, How recent
-· Any existing high-cost/informal debt? (Yes/No) · Total outstanding
-amount, Interest rate (% p.a.) · Credit score · I don't know my credit
-score
+Any EMI bounces? (Yes/No) · How frequent, How recent · Any existing
+high-cost/informal debt? (Yes/No) · Total outstanding amount, Interest
+rate (% p.a.) · Credit score · I don't know my credit score
 
 Anita is the only one of the three who saw the EMI-bounce detail fields
-(type, amount, frequency, recency) and the high-cost-debt amount/rate
-fields — both only appear because she answered "yes" to those two
-questions. She saw the informal-work phrasing ("How long have you been
-doing this work?") rather than Ravi's "Years in business," even though
-both map to the same underlying field.
+(frequency, recency) and the high-cost-debt amount/rate fields — both only
+appear because she answered "yes" to those two questions. She saw the
+informal-work phrasing ("How long have you been doing this work?") rather
+than Ravi's "Years in business," even though both map to the same
+underlying field.
 
 ### Outputs
 

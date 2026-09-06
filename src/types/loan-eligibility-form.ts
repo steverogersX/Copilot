@@ -77,9 +77,6 @@ const requiredEnum = <T extends Record<string, string>>(
     .union([z.enum(values), z.literal("")])
     .refine((value) => value !== "", { message });
 
-const optionalEnum = <T extends Record<string, string>>(values: T) =>
-  z.union([z.enum(values), z.literal("")]);
-
 const positiveNumberString = (message: string) =>
   z.string().refine((value) => value !== "" && Number(value) > 0, {
     message,
@@ -100,16 +97,15 @@ const yesNoOptional = z.union([
 ]);
 
 export const existingEmiSchema = z.object({
-  type: requiredEnum(LoanType, "Select EMI type"),
   amount: positiveNumberString("Enter a valid EMI amount"),
-  interestRate: percentageString("Enter a valid interest rate"),
+  monthsRemaining: positiveNumberString("Enter valid months remaining"),
 });
 
 export const emiBounceSchema = z.object({
-  type: requiredEnum(LoanType, "Select EMI type"),
-  amount: positiveNumberString("Enter a valid EMI amount"),
-  frequency: z.string(),
-  recency: optionalEnum(EmiBounceRecency),
+  frequency: z
+    .string()
+    .refine((value) => value !== "", { message: "Select how frequent" }),
+  recency: requiredEnum(EmiBounceRecency, "Select how recent"),
 });
 
 const baseLoanFormSchema = z.object({
