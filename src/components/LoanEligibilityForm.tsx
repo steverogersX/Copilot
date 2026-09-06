@@ -861,6 +861,20 @@ export default function LoanEligibilityForm() {
                     </span>
                   </div>
 
+                  <form.Subscribe
+                    selector={(state) => state.values.collateralAlreadyPledged}
+                  >
+                    {(collateralAlreadyPledged) =>
+                      collateralAlreadyPledged === "yes" && (
+                        <p className="rounded-md border border-amber-300 bg-amber-50 px-2.5 py-1.5 text-xs text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-400">
+                          Don&apos;t list the loan already secured against
+                          your pledged asset here — you&apos;ve already
+                          accounted for it above.
+                        </p>
+                      )
+                    }
+                  </form.Subscribe>
+
                   {field.state.value.length === 0 && (
                     <p className={hintClass}>No existing EMIs added.</p>
                   )}

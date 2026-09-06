@@ -193,11 +193,7 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
     existingObligations += Number(emi.amount);
   }
 
-  // High-cost debt has no stated EMI, only an outstanding amount, so estimate
-  // its monthly service cost from the borrower-reported rate (which can
-  // legitimately be 0 - e.g. an interest-free advance from family/employer)
-  // and count it too - otherwise the amount field is collected but never
-  // affects the affordability math, only the boolean override check below.
+  // High-cost debt is treated as an existing obligation
   if (formData.hasHighCostDebt === "yes") {
     const highCostDebtAmount = Number(formData.highCostDebtAmount);
     const highCostDebtRate = Number(formData.highCostDebtInterestRate);
@@ -219,9 +215,9 @@ export function engine(formData: LoanFormValues): EligibilityResult | null {
   // KNOWN LIMITATION: if the borrower already listed this same loan under
   // "existing EMIs" above, it gets counted twice here - there's no reliable
   // way to de-duplicate a free-text EMI entry against this collateral answer
-  // in the engine. This needs a UI-side fix (warn the user not to list the
-  // pledged-asset loan again once they've said it's already pledged), not an
-  // engine-side one.
+  // in the engine. The UI now warns against this (see the "Existing EMIs"
+  // section in LoanEligibilityForm.tsx), but a determined user can still
+  // double-enter it, so the engine-side risk remains.
   if (collateralAlreadyPledged && collateralOutstanding > 0) {
     const collateralLoanRate = Number(formData.collateralInterestRate);
     const collateralRemainingTenureMonths = Number(
